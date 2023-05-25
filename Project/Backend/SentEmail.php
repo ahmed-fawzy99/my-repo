@@ -19,7 +19,7 @@ $mail->isSMTP();                                // Set mailer to use SMTP
 $mail->Host = 'smtp-mail.outlook.com';          // Specify main and backup SMTP servers 
 $mail->SMTPAuth = true;                         // Enable SMTP authentication 
 $mail->Username = 'MyRepo99@hotmail.com';       // SMTP username 
-$mail->Password = 'MyRepo_is_S@fe';             // SMTP password 
+$mail->Password = '***********';             // SMTP password 
 $mail->SMTPSecure = 'STARTTLS';                 // Enable TLS encryption, `ssl` also accepted 
 $mail->Port = 587;                              // TCP port to connect to 
  
