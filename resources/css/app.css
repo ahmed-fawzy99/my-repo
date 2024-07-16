@@ -1,0 +1,26 @@
+@tailwind base;
+
+@layer base {
+    html {
+        @apply text-neutral-800;
+        /* Hiding Scrollbar */
+        -ms-overflow-style: none; /* IE 10+ */
+        scrollbar-width: none; /* Firefox */
+    }
+
+    html::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
+    }
+
+    html.dark {
+        @apply text-base-50 bg-base-800;
+    }
+
+    p {
+        @apply text-base-900 dark:text-base-100;
+    }
+
+}
+
+@tailwind components;
+@tailwind utilities;
