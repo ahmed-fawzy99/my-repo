@@ -3,7 +3,7 @@ import {mnemonicToSeed} from "bip39";
 import elliptic from "elliptic";
 import Swal from "sweetalert2";
 
-const Toast = Swal.mixin({
+export const Toast = Swal.mixin({
     toast: true,
     position: "top-right",
     showConfirmButton: false,

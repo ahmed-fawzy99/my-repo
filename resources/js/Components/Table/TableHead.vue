@@ -9,7 +9,7 @@ defineProps({
 <template>
     <th scope="col" class="px-6 py-3" >
         <span :class="{'cursor-pointer hover:underline': sortable}">
-            <slot />
+            <slot /> <span v-if="sortable"> ↕</span>
         </span>
     </th>
 </template>

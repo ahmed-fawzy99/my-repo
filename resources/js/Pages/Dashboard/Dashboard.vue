@@ -1,17 +1,20 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {Head, router, useForm} from '@inertiajs/vue3';
 import CryptoJS from 'crypto-js';
 import Swal from 'sweetalert2'
 import elliptic from "elliptic";
+import debounce from "lodash/debounce";
+
 import {
     formatFileSize,
     downloadFile,
     convertWordArrayToUint8Array,
     generateKey,
     getPrivateKey,
-    fancyPrompt
+    fancyPrompt,
+    Toast,
 } from "@/helpers.js";
 
 import Table from "@/Components/Table/Table.vue";
@@ -27,24 +30,21 @@ import FileInput from "@/Components/FileInput.vue";
 import Card from "@/Components/Card.vue";
 import ToolTip from "@/Components/ToolTip.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import Badge from "@/Components/Badge.vue";
 
 const file = ref(null);
-const newFileName = ref('');
 const usePrivateKey = ref(true);
 const encryptionKey = ref('');
 const ec = new elliptic.ec("curve25519");
+const sort = ref('file_name');
+const sort_dir = ref(true);
+const search = debounce(() => {
+    router.visit(route('dashboard', {sort: sort.value, sort_dir: sort_dir.value}),
+        {preserveState: true, preserveScroll: true})
+}, 100);
+watch(sort, search);
+watch(sort_dir, search);
 
-const Toast = Swal.mixin({
-    toast: true,
-    position: "top-right",
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
-    }
-});
 const fileForm = useForm({file: null, checksum: '', name: '', type: '', key: '', choice: true});
 const props = defineProps({
     userFiles: Object,
@@ -113,6 +113,8 @@ async function download(uuid, file_name, enc_key, checksum) {
             fileKey = CryptoJS.AES.decrypt(enc_key, privateKey).toString(CryptoJS.enc.Utf8);
         } else {
             fileKey = await fancyPrompt('Enter the Encryption Key:', 'Ca1i¢0CatsRTheBe$tBa8ie$')
+            if (!fileKey)
+                return;
         }
         const decrypted = CryptoJS.AES.decrypt(encryptedFile, fileKey);
         const decryptedChecksum = CryptoJS.MD5(decrypted.toString()).toString();
@@ -176,23 +178,34 @@ async function renameFile(uuid, oldFileName) {
     }
 }
 function deleteFile(uuid) {
-    if (confirm('Are you sure you want to delete this file?')) {
-        router.delete(route('delete-file', {uuid: uuid}), {
-            preserveScroll: true,
-            onError: (e) => {
-                Toast.fire({
-                    icon: 'error',
-                    title: Object.values(e)
-                });
-            },
-            onSuccess: () => {
-                Toast.fire({
-                    icon: "success",
-                    title: "File deleted successfully!"
-                });
-            },
-        });
-    }
+    Swal.fire({
+        title: "Are you sure you want to delete this file?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, Delete!",
+        denyButtonText: "No, Cancel!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.delete(route('delete-file', {uuid: uuid}), {
+                preserveScroll: true,
+                onError: (e) => {
+                    Toast.fire({
+                        icon: 'error',
+                        title: Object.values(e)
+                    });
+                },
+                onSuccess: () => {
+                    Toast.fire({
+                        icon: "success",
+                        title: "File deleted successfully!"
+                    });
+                },
+            });
+        }
+    });
+
 }
 </script>
 
@@ -201,17 +214,15 @@ function deleteFile(uuid) {
 
     <AuthenticatedLayout>
         <h1 class="text-4xl mb-4">Dashboard</h1>
-<!--        <p class="text-red-600 text-xl">{{userFiles.data}}</p>-->
         <div class="flex flex-row gap-4 h-fit">
             <Card class="w-3/4 overflow-visible">
-                <!--                <span class="relative text-2xl pi pi-plus bg-indigo-600 p-2 rounded-full  shadow-md inline cursor-pointer" />-->
+<!--                <span class="relative text-2xl pi pi-plus bg-indigo-600 p-2 rounded-full  shadow-md inline cursor-pointer" />-->
                 <h2 class="text-xl">Add File</h2>
 
                 <form @submit.prevent="submitFile" class="pt-4">
 
                     <FileInput no-label v-model="file"/>
-                    <Toggle class="mt-4" v-model="usePrivateKey" label="Encrypt Using My Private Key"/>
-
+                    <Toggle class="mt-4" v-model="usePrivateKey" label="Encrypt Using My Private Key (Disable If Sharing)"/>
                     <div v-if="!usePrivateKey">
                         <InputLabel for="enc-choice" value="Specific Encryption Key" class="inline"/>
                         <span class="pi pi-refresh ml-2 cursor-pointer text-xs" title="Generate Random Key"
@@ -263,9 +274,10 @@ function deleteFile(uuid) {
         <Card class="flex-1">
             <Table :links="userFiles.links" :showingNumber="userFiles.data.length" :totalNumber="userFiles.total">
                 <template #Head>
-                    <TableHead sortable>File Name ↕</TableHead>
-                    <TableHead sortable>Size ↕</TableHead>
-                    <TableHead sortable>Uploaded on↕</TableHead>
+                    <TableHead sortable @click="sort='file_name'; sort_dir = !sort_dir;">File Name</TableHead>
+                    <TableHead sortable @click="sort='size'; sort_dir = !sort_dir;">Size</TableHead>
+                    <TableHead sortable @click="sort='created_at'; sort_dir = !sort_dir;">Uploaded on</TableHead>
+                    <TableHead>Labels</TableHead>
                     <TableHead>{{ 'Action' }}</TableHead>
                 </template>
                 <template #Body>
@@ -273,10 +285,17 @@ function deleteFile(uuid) {
                         <TableBodyHeader :href="'#'">{{ file.file_name }}</TableBodyHeader>
                         <TableBodyHeader :href="'#'">{{ formatFileSize(file.size) }}</TableBodyHeader>
                         <TableBody :href="'#'">{{ new Date(file.created_at).toLocaleString('en-EG')}}</TableBody>
+                        <TableBody :href="'#'">
+                            <Badge v-if="file.custom_properties.enc_key" color="blue">Private Key</Badge>
+                            <Badge v-else color="yellow">User-defined Key</Badge>
+                        </TableBody>
                         <TableBodyAction>
                             <div class=" flex gap-4" >
                                 <a @click="download(file.uuid, file.file_name, file.custom_properties.enc_key, file.custom_properties.checksum)" href="#" title="Download">
                                     <span class="pi pi-cloud-download text-base-500 cursor-pointer hover:underline decoration-primary-400"/>
+                                </a>
+                                <a @click="download(file.uuid, file.file_name, file.custom_properties.enc_key, file.custom_properties.checksum)" href="#" title="Share">
+                                    <span class="pi pi-share-alt text-base-500 cursor-pointer hover:underline decoration-primary-400"/>
                                 </a>
                                 <a @click="renameFile(file.uuid, file.file_name)" href="#" title="Rename File">
                                     <span class="pi pi-pen-to-square text-base-500 cursor-pointer hover:underline decoration-primary-400"/>

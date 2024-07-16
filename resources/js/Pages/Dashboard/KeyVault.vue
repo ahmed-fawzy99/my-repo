@@ -19,30 +19,32 @@ const props = defineProps({
 
 const isRevealed = ref(false);
 const decrypted = ref(false);
-function toggleKeys() {
+
+const fillTable = (text = undefined) => {
+    props.files.data.forEach((file) => {
+        document.getElementById(file.id).innerText = text ?? file.custom_properties.enc_key;
+    });
+}
+async function toggleKeys() {
     if (isRevealed.value){
-        props.files.data.forEach((file) => {
-            document.getElementById(file.id).innerText = "*******************************";
-        });
+        fillTable("*******************************");
         isRevealed.value = false;
         return;
     }
-
     if (!decrypted.value){
         const mnemonicSeed = "sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli";
         // const mnemonicSeed = prompt('Enter your secret');
-        props.files.data.forEach(async (file) => {
-            const privateKey = await getPrivateKey(mnemonicSeed);
-            file.custom_properties.enc_key = CryptoJS.AES.decrypt(file.custom_properties.enc_key, privateKey).toString(CryptoJS.enc.Utf8);
-            document.getElementById(file.id).innerText = file.custom_properties.enc_key;
-            decrypted.value = true;
+        const privateKey = await getPrivateKey(mnemonicSeed);
+
+        props.files.data.forEach((file) => {
+            file.custom_properties.enc_key =
+                file.custom_properties.enc_key
+                    ? CryptoJS.AES.decrypt(file.custom_properties.enc_key, privateKey).toString(CryptoJS.enc.Utf8)
+                    : "User-defined Key";
         });
+        decrypted.value = true;
     }
-    else {
-        props.files.data.forEach(async (file) => {
-            document.getElementById(file.id).innerText = file.custom_properties.enc_key;
-        });
-    }
+    fillTable()
     isRevealed.value = true;
 }
 
@@ -67,9 +69,9 @@ function toggleKeys() {
         <Card class="">
             <Table :links="files.links" :showingNumber="files.data.length" :totalNumber="files.total">
                 <template #Head>
-                    <TableHead sortable>File Name ↕</TableHead>
-                    <TableHead >UUID</TableHead>
-                    <TableHead >Key</TableHead>
+                    <TableHead sortable>File Name</TableHead>
+                    <TableHead>UUID</TableHead>
+                    <TableHead>Key</TableHead>
                 </template>
                 <template #Body>
                     <TableRow v-for="file in files.data" :key="file.id">
