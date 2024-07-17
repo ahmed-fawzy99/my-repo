@@ -1,6 +1,9 @@
 import { Toast } from "./generic-helpers";
 import Swal from "sweetalert2";
 import {router} from "@inertiajs/vue3";
+
+// Review the 'async' functions here. Probably they should be 'sync' functions?
+
 export async function removeContact(id) {
     Swal.fire({
         title: "Are you sure you want to delete this cotnact?",
@@ -51,8 +54,24 @@ export async function sendContactRequest(selectedContacts){
     });
 }
 
+export async function cancelContactRequest(id){
+    router.delete(route('sent-request-destroy', {id: id}), {
+        preserveScroll: true,
+        onError: (e) => {
+            Toast.fire({
+                icon: 'error',
+                title: Object.values(e)
+            });
+        },
+        onSuccess: () => {
+            Toast.fire({
+                icon: "success",
+                title: "Request removed successfully!"
+            });
+        },
+    });
+}
 export async function contactRequestResponse(id, choice) {
-    console.log(id, choice)
     router.patch(route('contacts.update', {id: id}), {choice: choice} , {
         preserveScroll: true,
         onError: (e) => {

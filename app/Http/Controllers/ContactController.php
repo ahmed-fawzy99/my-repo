@@ -14,7 +14,7 @@ class ContactController extends Controller
      */
     public function index(Request $request)
     {
-        return Inertia::render('Contacts/Contacts', [
+        return Inertia::render('Contact/Contacts', [
             'contacts' => auth()->user()->contacts()->get(),
             'allUsers' => User::with('contacts')->
             where('id', '!=', auth()->id())->
@@ -22,7 +22,8 @@ class ContactController extends Controller
                 $query->where('name', 'ILIKE', '%' . $term . '%')
                     ->orWhere('email', 'ILIKE', '%' . $term . '%');
             })->select('id', 'name', 'email')->orderBy('name')->paginate(10),
-            'contactRequestsCount' => $this->getContactRequestsCount(),
+            'contactRequestsCount' => $this->incomingContactRequestsCount(),
+            'sentRequestsCount' => $this->sentContactRequestsCount(),
         ]);
     }
     /**
@@ -30,10 +31,20 @@ class ContactController extends Controller
      */
     public function requestsIndex()
     {
-        return Inertia::render('Contacts/ContactRequests', [
+        return Inertia::render('Contact/ContactRequests', [
             'contactRequests' => Contact::with('user:id,name')->where('contact_id', auth()->id())
                 ->where('contact_accepted', false)
                 ->orderBy('contacts.created_at', 'desc')->get(),
+            'sentRequestsCount' => $this->sentContactRequestsCount(),
+        ]);
+    }
+    public function sentRequestsIndex()
+    {
+        return Inertia::render('Contact/ContactSentRequests', [
+            'contactSentRequests' => Contact::with('contact:id,name')->where('user_id', auth()->id())
+                ->where('contact_accepted', false)
+                ->orderBy('contacts.created_at', 'desc')->get(),
+            'contactRequestsCount' => $this->incomingContactRequestsCount(),
         ]);
     }
 
@@ -42,13 +53,6 @@ class ContactController extends Controller
      */
     public function create(Request $request)
     {
-        return Inertia::render('Contacts/ContactCreate', [
-            'allUsers' => User::when($request->term, function ($query, $term) {
-                $query->where('name', 'ILIKE', '%' . $term . '%')
-                    ->orWhere('email', 'ILIKE', '%' . $term . '%');
-            })->where('id', '!=', auth()->id())->select('id', 'name', 'email')->orderBy('name')->paginate(10),
-            'contactRequestsCount' => $this->getContactRequestsCount(),
-        ]);
     }
 
     /**
@@ -61,7 +65,10 @@ class ContactController extends Controller
             'selectedContacts.*' => 'required|ulid',
         ]);
         try {
-            auth()->user()->contacts()->attach($validated['selectedContacts']);
+            foreach ($validated['selectedContacts'] as $contactId) {
+                $contact = User::find($contactId);
+                auth()->user()->contacts()->attach($contact);
+            }
             return redirect()->route('contacts.index');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -94,9 +101,15 @@ class ContactController extends Controller
             'choice' => 'required|boolean',
         ]);
         if ($validated['choice'] === true) {
-            Contact::where('contact_id', auth()->id())->where('user_id', $id)->update([
+            Contact::where('user_id', $id)->where('contact_id', auth()->id())->update([
                 'contact_accepted' => $validated['choice'],
             ]);
+            Contact::create([
+                'user_id' => auth()->id(),
+                'contact_id' => $id,
+                'contact_accepted' => true,
+            ]);
+
         } else {
             Contact::where('contact_id', auth()->id())->where('user_id', $id)->delete();
         }
@@ -109,14 +122,26 @@ class ContactController extends Controller
      */
     public function destroy(string $id)
     {
-        auth()->user()->contacts()->detach($id);
+        $contact = User::find($id);
+        auth()->user()->contacts()->detach($contact);
+        $contact->contacts()->detach(auth()->user());
         return redirect()->route('contacts.index');
     }
+    // ^^^ inconsistent parameters. stick with either $id or $request.
+    public function destroySentRequest(Request $request)
+    {
+        auth()->user()->contacts()->detach($request->id);
+        return redirect()->route('contacts-sent-requests');
+    }
 
-    private function getContactRequestsCount()
+    private function incomingContactRequestsCount()
     {
         return Contact::where('contact_id', auth()->id())
-            ->where('contact_accepted', false)
-            ->orderBy('contacts.created_at', 'desc')->count();
+            ->where('contact_accepted', false)->count();
+    }
+    private function sentContactRequestsCount()
+    {
+        return Contact::where('user_id', auth()->id())
+            ->where('contact_accepted', false)->count();
     }
 }

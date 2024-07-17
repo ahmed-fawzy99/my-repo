@@ -42,11 +42,8 @@ onMounted(() => {
                 <span  v-for="selectedContact in selectedContacts">{{selectedContact.name}}, </span>
             </li>
         </ul>
-        <Link v-if="selectedContacts.length" @click="sendContactRequest(selectedContacts.map(contact => contact.id))" href="#"
-              class="flex items-center p-3 text-sm font-medium text-primary-600 dark:text-primary-400 border-t border-base-200 rounded-b-lg bg-base-50 dark:border-base-600 hover:bg-base-100 dark:bg-base-700 dark:hover:bg-base-600  hover:underline">
-            <span class="pi pi-user-plus mr-2" />
-            Send a Request
-        </Link>
+        <slot name="action"/>
+
     </div>
 
 </template>

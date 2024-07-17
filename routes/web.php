@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -30,9 +31,14 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::patch('rename-file', [FileController::class, 'modify'])->name('rename-file');
     Route::delete('delete-file', [FileController::class, 'destroy'])->name('delete-file');
 
-    // Contacts
+    // Contact
     Route::get('contacts/requests', [ContactController::class, 'requestsIndex'])->name('contacts-requests');
+    Route::get('contacts/requests/sent', [ContactController::class, 'sentRequestsIndex'])->name('contacts-sent-requests');
+    Route::delete('contacts/requests/destroy', [ContactController::class, 'destroySentRequest'])->name('sent-request-destroy');
     Route::resource('contacts', ContactController::class);
+
+    // Conversations
+    Route::resource('conversations', ConversationController::class);
 });
 
 Route::middleware('auth')->group(function () {

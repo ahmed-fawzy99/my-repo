@@ -8,17 +8,19 @@ import ContactTabs from "@/Components/Tabs/ContactTabs.vue";
 import {ref, watch} from "vue";
 import debounce from "lodash/debounce.js";
 import ContactFind from "@/Components/ContactFind.vue";
+import {sendContactRequest} from "@/js-helpers/contacts-helper.js";
 
 const props = defineProps({
     contacts: Object,
     allUsers: Object,
     contactRequestsCount: Number,
+    sentRequestsCount: Number,
 });
 
 const term = ref('');
 const search = debounce(() => {
     router.visit(route('contacts.index', {term: term.value}),
-        {preserveState: true, preserveScroll: true})
+        {preserveState: true, preserveScroll: true});
 }, 250);
 watch(term, search);
 
@@ -34,11 +36,11 @@ const trackSelectedContacts = (event, id, name) => {
 </script>
 
 <template>
-    <Head title="Dashboard"/>
+    <Head title="My Contacts"/>
 
     <AuthenticatedLayout>
         <template #tabs>
-            <ContactTabs :count="contactRequestsCount"/>
+            <ContactTabs :inCount="contactRequestsCount" :outCount="sentRequestsCount"/>
         </template>
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-4xl mb-4">My Contacts</h1>
@@ -65,6 +67,13 @@ const trackSelectedContacts = (event, id, name) => {
                             </a>
                         </li>
                     </template>
+                    <template #action>
+                        <Link v-if="selectedContacts.length" @click="selectedContacts = []; sendContactRequest(selectedContacts.map(contact => contact.id))" href="#"
+                              class="flex items-center p-3 text-sm font-medium text-primary-600 dark:text-primary-400 border-t border-base-200 rounded-b-lg bg-base-50 dark:border-base-600 hover:bg-base-100 dark:bg-base-700 dark:hover:bg-base-600  hover:underline">
+                            <span class="pi pi-user-plus mr-2" />
+                            Send a Request
+                        </Link>
+                    </template>
                 </ContactFind>
             </div>
         </div>
@@ -78,10 +87,6 @@ const trackSelectedContacts = (event, id, name) => {
             </div>
             <div v-else class="flex h-32 justify-center items-center text-xl">
                 <span class="pi pi-info-circle mr-2" /> You don't have any contacts.
-                <Link
-                    class="text-primary-500 underline ms-2" :href="route('profile.edit', {id: $attrs.auth.user.id})">
-                    Click here to add a new contact.
-                </Link>
             </div>
         </Card>
 

@@ -3,9 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Contact;
+use App\Models\Conversation;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,8 +28,33 @@ class DatabaseSeeder extends Seeder
             'email' => 'normal@root.com',
         ]);
         $root->contacts()->attach($root2);
+        $root2->contacts()->attach($root);
 
         Contact::where('user_id', $root->id)->where('contact_id', $root2->id)->update(['contact_accepted' => true]);
-        $root->contacts()->attach(User::all()->random(3));
+        Contact::where('user_id', $root2->id)->where('contact_id', $root->id)->update(['contact_accepted' => true]);
+
+        $i = 1;
+        foreach (User::all() as $user) {
+            if ($user->id === $root->id || $user->id === $root2->id) {
+                continue;
+            }
+            $root->contacts()->attach($user);
+//            $user->contacts()->attach($root);
+            $i = $i + 1;
+            if ($i > 3) {
+                break;
+            }
+        }
+
+        $convo = Conversation::factory()->create([
+            'user_1' => $root->id,
+            'user_2' => $root2->id,
+        ]);
+        $convo2 = Conversation::factory()->create([
+            'user_1' => $root2->id,
+            'user_2' => $root->id,
+        ]);
+
+
     }
 }

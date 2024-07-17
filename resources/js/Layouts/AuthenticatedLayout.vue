@@ -48,7 +48,7 @@ const setUsageWarning = () => {
                         <Link
                             class="flex items-center justify-center w-12 h-12 mt-2 rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
-                            :href="route('contacts.index')">
+                            :href="route('conversations.index')">
                             <span class="pi pi-inbox scale-125 text-base-700 dark:text-base-200"/>
                         </Link>
                     </div>

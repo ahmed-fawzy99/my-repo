@@ -52,7 +52,7 @@ async function toggleKeys() {
 </script>
 
 <template>
-    <Head title="Dashboard"/>
+    <Head title="Key Vault"/>
 
     <AuthenticatedLayout>
         <template #tabs>

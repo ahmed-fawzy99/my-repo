@@ -9,7 +9,8 @@ class Contact extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['contact_accepted'];
+    protected $guarded = [];
+
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -21,8 +22,4 @@ class Contact extends Model
         return $this->belongsTo(User::class, 'contact_id');
     }
 
-    public function entity()
-    {
-        return 1;
-    }
 }

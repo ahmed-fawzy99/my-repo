@@ -15,7 +15,7 @@ import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
 </script>
 
 <template>
-    <Head title="Dashboard"/>
+    <Head title="Account Data"/>
 
     <AuthenticatedLayout>
         <template #tabs>

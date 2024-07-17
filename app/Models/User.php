@@ -54,8 +54,16 @@ class User extends Authenticatable implements HasMedia
         ];
     }
 
-    public function contacts()
+    public function contacts(): belongsToMany
     {
-        return User::with('user', 'contact');
+        return $this->belongsToMany(User::class,'contacts',
+            'user_id', 'contact_id')
+            ->where('contact_accepted', true)
+            ->withTimestamps();
+    }
+
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_1');
     }
 }
