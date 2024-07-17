@@ -4,7 +4,7 @@ import {Head, router} from '@inertiajs/vue3';
 import Card from "@/Components/Card.vue";
 
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import {getPrivateKey, truncate} from "@/helpers.js";
+import {getPrivateKey} from "@/js-helpers/crypto-helpers.js";
 import TableBodyHeader from "@/Components/Table/TableBodyHeader.vue";
 import Table from "@/Components/Table/Table.vue";
 import TableHead from "@/Components/Table/TableHead.vue";
@@ -12,6 +12,7 @@ import TableRow from "@/Components/Table/TableRow.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
 import CryptoJS from "crypto-js";
 import {ref} from "vue";
+import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
 
 const props = defineProps({
     files: Object,
@@ -54,6 +55,9 @@ async function toggleKeys() {
     <Head title="Dashboard"/>
 
     <AuthenticatedLayout>
+        <template #tabs>
+            <DashboardTabs />
+        </template>
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h1 class="text-4xl mb-4">Your Key Vault</h1>

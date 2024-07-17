@@ -1,6 +1,3 @@
-import CryptoJS from "crypto-js";
-import {mnemonicToSeed} from "bip39";
-import elliptic from "elliptic";
 import Swal from "sweetalert2";
 
 export const Toast = Swal.mixin({
@@ -34,28 +31,7 @@ export function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export function convertWordArrayToUint8Array(wordArray) {
-    var arrayOfWords = wordArray.hasOwnProperty("words") ? wordArray.words : [];
-    var length = wordArray.hasOwnProperty("sigBytes") ? wordArray.sigBytes : arrayOfWords.length * 4;
-    var uInt8Array = new Uint8Array(length), index=0, word, i;
-    for (i=0; i<length; i++) {
-        word = arrayOfWords[i];
-        uInt8Array[index++] = word >> 24;
-        uInt8Array[index++] = (word >> 16) & 0xff;
-        uInt8Array[index++] = (word >> 8) & 0xff;
-        uInt8Array[index++] = word & 0xff;
-    }
-    return uInt8Array;
-}
 
-export function generateKey (n = 32) {
-    return CryptoJS.lib.WordArray.random(n / 2).toString();
-}
-
-export async function getPrivateKey(mnemonicSecret) {
-    const seed = (await mnemonicToSeed(mnemonicSecret)).toString('hex')
-    return (new elliptic.ec("curve25519")).keyFromPrivate(seed).getPrivate('hex');
-}
 
 export async function fancyPrompt(title, inputPlaceholder = '', inputType = 'text', showCancelButton = true) {
     const { value: result } = await Swal.fire({
@@ -65,11 +41,10 @@ export async function fancyPrompt(title, inputPlaceholder = '', inputType = 'tex
         showCancelButton: showCancelButton
     });
     if (!result) {
-        Toast.fire({
+        return Toast.fire({
             icon: 'info',
             title: 'Operation Cancelled.'
         });
-        return false;
     }
     return result;
 }

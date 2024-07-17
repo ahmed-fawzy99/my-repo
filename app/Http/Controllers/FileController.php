@@ -23,7 +23,7 @@ class FileController extends Controller
                 'enc_key' => $validated['key'], // if null, then it's a custom key
                 'checksum' => $validated['checksum'],
             ])
-            ->toMediaCollection('encrypted_files' );
+            ->toMediaCollection('encrypted_files');
         $media->mime_type = $validated['type'];
         $media->save();
         return redirect()->route('dashboard');

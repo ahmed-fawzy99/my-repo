@@ -2,7 +2,6 @@
 import {ref} from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import {Link} from '@inertiajs/vue3';
 import 'primeicons/primeicons.css'
@@ -22,8 +21,7 @@ const setUsageWarning = () => {
 
 <template>
     <div class="flex flex-row">
-        <aside
-            class="fixed top-0 z-40 items-center w-16 h-screen overflow-hidden text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
+        <aside class="fixed top-0 z-40 items-center w-16 h-screen overflow-hidden text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
             <div class="flex flex-col justify-between h-full">
                 <div class="flex flex-col h-full">
                     <Link class="flex items-center justify-center pt-3 pb-2" :href="route('dashboard')">
@@ -41,7 +39,20 @@ const setUsageWarning = () => {
                             :href="route('profile.edit')">
                             <span class="pi pi-cog scale-125 text-base-700 dark:text-base-200"/>
                         </Link>
+                        <Link
+                            class="flex items-center justify-center w-12 h-12 mt-2 rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                            :href="route('contacts.index')">
+                            <span class="pi pi-users scale-125 text-base-700 dark:text-base-200"/>
+                        </Link>
+                        <Link
+                            class="flex items-center justify-center w-12 h-12 mt-2 rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                            :href="route('contacts.index')">
+                            <span class="pi pi-inbox scale-125 text-base-700 dark:text-base-200"/>
+                        </Link>
                     </div>
+
                 </div>
                 <div class="flex flex-col items-center border-base-700 mb-2">
                     <Link
@@ -70,15 +81,7 @@ const setUsageWarning = () => {
                         <div class="flex">
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    Dashboard
-                                </NavLink>
-                                <NavLink :href="route('key-vault')" :active="route().current('key-vault')">
-                                    Key Vault
-                                </NavLink>
-                                <NavLink :href="route('account-data')" :active="route().current('account-data')">
-                                    Account Data
-                                </NavLink>
+                                <slot name="tabs"></slot>
                             </div>
                         </div>
 

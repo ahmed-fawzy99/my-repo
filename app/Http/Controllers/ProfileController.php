@@ -13,6 +13,11 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+
+    public function show(): Response
+    {
+        return Inertia::render('Dashboard/AccountData');
+    }
     /**
      * Display the user's profile form.
      */
@@ -61,13 +66,14 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    public function getKeys(Request $request): Response | RedirectResponse
+    public function getKeys(): Response | RedirectResponse
     {
         if (auth()->user()->public_key) {
             return Redirect('/dashboard');
         }
         return Inertia::render('Profile/RegisterKey');
     }
+
     public function finalize(Request $request): Response | RedirectResponse
     {
         $validated = $request->validate([

@@ -9,6 +9,7 @@ import DT from "@/Components/DescriptionList/DT.vue";
 import DD from "@/Components/DescriptionList/DD.vue";
 import ToolTip from "@/Components/ToolTip.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
 
 
 </script>
@@ -17,6 +18,9 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
     <Head title="Dashboard"/>
 
     <AuthenticatedLayout>
+        <template #tabs>
+            <DashboardTabs />
+        </template>
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-4xl mb-4">Account Data</h1>
             <div class="flex inline-flex gap-4">
@@ -26,7 +30,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
             </div>
         </div>
 
-        <Card class="">
+        <Card>
             <DescriptionList>
                 <DescriptionListItem>
                     <DT>Name</DT>
