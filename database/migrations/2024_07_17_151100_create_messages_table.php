@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->foreignUlid('conversation_id')->constrained()->onDelete('cascade');
-            $table->foreignUlid('sender')->constrained('users')->onDelete('cascade');
+            $table->foreignUlid('sender_id')->constrained('users')->onDelete('cascade');
             $table->text('content');
+            $table->string('signature', 128);
+            $table->boolean('is_read')->default(false);
             $table->timestamps();
         });
     }

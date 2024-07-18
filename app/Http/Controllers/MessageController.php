@@ -28,7 +28,16 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'content' => 'required',
+            'conversationId' => 'required|ulid',
+            'signature' => 'required|string|size:128',
+        ]);
+        if (auth()->user()->conversations->contains($validated['conversationId'])) {
+            auth()->user()->sendMessage($validated['conversationId'], $validated['content'], $validated['signature']);
+            return redirect()->back();
+        }
+        throw new \Exception('Unauthorized');
     }
 
     /**
@@ -60,6 +69,11 @@ class MessageController extends Controller
      */
     public function destroy(Message $message)
     {
-        //
+        if ($message->sender_id === auth()->id()) {
+            $message->content = '';
+            $message->save();
+        } else {
+            throw new \Exception('Unauthorized');
+        }
     }
 }

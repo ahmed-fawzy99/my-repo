@@ -5,6 +5,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -39,6 +40,10 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
 
     // Conversations
     Route::resource('conversations', ConversationController::class);
+
+    // Messages
+    Route::resource('messages', MessageController::class);
+
 });
 
 Route::middleware('auth')->group(function () {

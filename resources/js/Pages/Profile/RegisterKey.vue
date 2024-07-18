@@ -7,6 +7,7 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import elliptic from "elliptic";
 import {generateMnemonic, mnemonicToSeed} from "bip39";
 import Swal from "sweetalert2";
+import {copyToClipboard} from "@/js-helpers/generic-helpers.js";
 
 const Toast = Swal.mixin({
     toast: true,
@@ -23,21 +24,6 @@ const mnemonic = ref('')
 const publicKey = ref('')
 const keyConfirmation = ref(false)
 const processing = ref(true);
-
-async function copyToClipboard() {
-    try {
-        await navigator.clipboard.writeText(mnemonic.value);
-        Toast.fire({
-            icon: 'success',
-            title: 'Secret Phrase Copied to clipboard'
-        });
-    } catch (err) {
-        Toast.fire({
-            icon: 'error',
-            title: 'Failed to copy to clipboard: ' + err
-        });
-    }
-}
 
 async function generateKey() {
     mnemonic.value = generateMnemonic(128);
@@ -64,7 +50,7 @@ onMounted(() => {
         </div>
 
         <div class="flex flex-col p-4 bg-base-100 dark:bg-base-900 rounded-xl text-2xl italic text-justify shadow-sm">
-            <svg @click="copyToClipboard()" class="w-3.5 h-3.5 text-base-600 hover:text-base-800 dark:text-base-600
+            <svg @click="copyToClipboard(mnemonic)" class="w-3.5 h-3.5 text-base-600 hover:text-base-800 dark:text-base-600
                     dark:hover:text-base-400 cursor-pointer ml-auto"
                  aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
                 <path d="M16 1h-3.278A1.992 1.992 0 0 0 11 0H7a1.993 1.993 0 0 0-1.722 1H2a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2Zm-3 14H5a1 1 0 0 1 0-2h8a1 1 0 0 1 0 2Zm0-4H5a1 1 0 0 1 0-2h8a1 1 0 1 1 0 2Zm0-5H5a1 1 0 0 1 0-2h2V2h4v2h2a1 1 0 1 1 0 2Z"/>

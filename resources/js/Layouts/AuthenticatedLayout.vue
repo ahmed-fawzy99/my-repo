@@ -17,6 +17,13 @@ const setUsageWarning = () => {
     localStorage.setItem('usageWarning', 'seen')
 };
 
+defineProps({
+    freeContent: {
+        type: Boolean,
+        default: false
+    },
+});
+
 </script>
 
 <template>
@@ -92,7 +99,7 @@ const setUsageWarning = () => {
                                 @click="toggleDark()"
                                 class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700
                                     focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700
-                                    rounded-lg text-sm p-2.5"
+                                    rounded-lg text-sm p-2.5 transition-colors duration-200"
                             >
                                 <svg
                                     id="theme-toggle-dark-icon"
@@ -234,7 +241,8 @@ const setUsageWarning = () => {
 
             <!-- Page Content -->
             <main>
-                <div class="py-8">
+                <slot name="free-content" />
+                <div v-if="!freeContent" class="py-8">
                     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                         <slot/>
                     </div>

@@ -33,7 +33,6 @@ class Conversation extends Model
             if ($exists) {
                 // Cancel the creation of the model
                 throw new \Exception('Conversation already exists');
-                return false;
             }
         });
     }
@@ -41,11 +40,15 @@ class Conversation extends Model
 
     public function user_1(): \Illuminate\Database\Eloquent\Relations\belongsTo
     {
-        return $this->belongsTo(User::class, 'user_1');
+        return $this->belongsTo(User::class, 'user_1', 'id');
     }
     public function user_2(): \Illuminate\Database\Eloquent\Relations\belongsTo
     {
-        return $this->belongsTo(User::class, 'user_2');
+        return $this->belongsTo(User::class, 'user_2', 'id');
+    }
+    public function users(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->user_1()->get()->union($this->user_2()->get()) ;
     }
 
     public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany

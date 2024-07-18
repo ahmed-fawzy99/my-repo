@@ -32,7 +32,6 @@ export function formatFileSize(bytes) {
 }
 
 
-
 export async function fancyPrompt(title, inputPlaceholder = '', inputType = 'text', showCancelButton = true) {
     const { value: result } = await Swal.fire({
         title: title,
@@ -47,4 +46,25 @@ export async function fancyPrompt(title, inputPlaceholder = '', inputType = 'tex
         });
     }
     return result;
+}
+
+export function toaster(icon, title) {
+    Toast.fire({
+        icon: icon,
+        title: title
+    });
+}
+export async function copyToClipboard(content) {
+    try {
+        await navigator.clipboard.writeText(content);
+        Toast.fire({
+            icon: 'success',
+            title: 'Copied to clipboard!'
+        });
+    } catch (err) {
+        Toast.fire({
+            icon: 'error',
+            title: 'Failed to copy to clipboard: ' + err
+        });
+    }
 }
