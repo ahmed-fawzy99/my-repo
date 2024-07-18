@@ -49,14 +49,21 @@ import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
                     <DD>{{ $attrs.auth.user.email_verified_at ? 'Verified ✅' : 'Unverified ❌' }}</DD>
                 </DescriptionListItem>
                 <DescriptionListItem>
-                    <DT>Public Key
+                    <DT>Public Key 1
                         <ToolTip direction="right">
                             This is your public key. FURTHER EXPLAINATION TO BE PUT HERE
                         </ToolTip>
                     </DT>
-                    <DD>{{ $attrs.auth.user.public_key }}</DD>
+                    <DD>{{ $attrs.auth.user.public_key_ecdh }}</DD>
                 </DescriptionListItem>
-                <DescriptionListItem></DescriptionListItem>
+                <DescriptionListItem>
+                    <DT>Public Key 2
+                        <ToolTip direction="right">
+                            This is your public key. FURTHER EXPLAINATION TO BE PUT HERE
+                        </ToolTip>
+                    </DT>
+                    <DD>{{ $attrs.auth.user.public_key_eddsa }}</DD>
+                </DescriptionListItem>
             </DescriptionList>
 
         </Card>

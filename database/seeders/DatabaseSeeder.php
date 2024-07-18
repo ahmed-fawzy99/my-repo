@@ -21,12 +21,14 @@ class DatabaseSeeder extends Seeder
         $root = User::factory()->create([
             'name' => 'Super Root',
             'email' => 'super@root.com',
-            'public_key' => '1e252f694f3a2840d9c9cadd4059c5f87359cfcb68fe45c39ad242e1ebb55728',
+//            'public_key_ecdh' => '1e252f694f3a2840d9c9cadd4059c5f87359cfcb68fe45c39ad242e1ebb55728',
+//            'public_key_eddsa' => '1e252f694f3a2840d9c9cadd4059c5f87359cfcb68fe45c39ad242e1ebb55728',
         ]);
         $root2 = User::factory()->create([
             'name' => 'Normal Root',
             'email' => 'normal@root.com',
-            'public_key' => '1fdc00478c5562bef15e75da7343f5d0efc88a0da23028df7f05e506a609454d',
+//            'public_key_ecdh' => '1fdc00478c5562bef15e75da7343f5d0efc88a0da23028df7f05e506a609454d',
+//            'public_key_eddsa' => '1fdc00478c5562bef15e75da7343f5d0efc88a0da23028df7f05e506a609454d',
         ]);
         $root->contacts()->attach($root2);
         $root2->contacts()->attach($root);

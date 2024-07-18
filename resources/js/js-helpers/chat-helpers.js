@@ -5,45 +5,50 @@ import CryptoJS from "crypto-js";
 import elliptic from "elliptic";
 import {mnemonicToSeed} from "bip39";
 
-const ec_25519 = new elliptic.ec('curve25519');         // ECDH for curve25519 - For key exchange
-const ec_ed25519 = new elliptic.eddsa('ed25519');   // EdDSA for Ed25519 - For signing
+const ecdh_25519 = new elliptic.ec('curve25519');         // ECDH for curve25519 - For key exchange
+const eddsa_ed25519 = new elliptic.eddsa('ed25519');   // EdDSA for Ed25519 - For signing
 
 async function getSeed(mnemonicPhrase) {
     return (await mnemonicToSeed(mnemonicPhrase)).toString('hex');
 }
-async function getEllipticKeyPairFromMnemonic(mnemonicPhrase) {
+async function getEllipticKeyPairFromMnemonic(mnemonicPhrase, mode) {
     const seed = await getSeed(mnemonicPhrase);
-    return ec_25519.keyFromPrivate(seed);
+    return mode.toLowerCase() === "ecdh" ? ecdh_25519.keyFromPrivate(seed) : eddsa_ed25519.keyFromSecret(seed);
 }
-export async function validatePrivateKey(mnemonicPhrase, publicKey) {
-    const senderKey =  await getEllipticKeyPairFromMnemonic(mnemonicPhrase) ;
-    const senderPublKey = senderKey.getPublic('hex');
-    return senderPublKey === publicKey;
+export async function validatePrivateKey(mnemonicPhrase, publicKeys) {
+    const senderKeyEcdh =  await getEllipticKeyPairFromMnemonic(mnemonicPhrase, "ecdh");
+    const senderKeyEddsa =  await getEllipticKeyPairFromMnemonic(mnemonicPhrase, "eddsa");
+
+    const senderPublKeyEcdh = senderKeyEcdh.getPublic('hex');
+    const senderPublKeyEddsa = senderKeyEddsa.getPublic('hex');
+    return senderPublKeyEcdh === publicKeys[0] && senderPublKeyEddsa === publicKeys[1];
 }
 
-function getSharedKey(keyPair, receiverPubKey) {
-    return keyPair.derive(ec_25519.keyFromPublic(receiverPubKey, 'hex').getPublic()).toString(16);
+function getSharedKey(keyPair, receiverPubKey) { // Used only for ECDH
+    return keyPair.derive(ecdh_25519.keyFromPublic(receiverPubKey, 'hex').getPublic()).toString(16);
 }
 export async function getSharedKeyFromMnemonic(PrvMnemonic, receiverPubKey) {
-    const senderKeyPair = await getEllipticKeyPairFromMnemonic(PrvMnemonic);
+    const senderKeyPair = await getEllipticKeyPairFromMnemonic(PrvMnemonic, "ecdh");
     return getSharedKey(senderKeyPair, receiverPubKey);
 }
 function signMessage(PrvMnemonic, message) {
     const wordArray = CryptoJS.lib.WordArray.create(message);
-    const key = ec_ed25519.keyFromSecret(getSeed(PrvMnemonic));
+    const key = eddsa_ed25519.keyFromSecret(getSeed(PrvMnemonic));
     return key.sign(wordArray).toHex(); // signature
 }
 
+// receiverPubKey is an array of two public keys [ECDH, EdDSA]
 async function safeMessage(content, senderPrvMnemonic, receiverPubKey) {
     const signature = signMessage(senderPrvMnemonic, content);
     const signedContent = JSON.stringify({content, signature});
-    const sharedKey = await getSharedKeyFromMnemonic(senderPrvMnemonic, receiverPubKey);
+    const sharedKey = await getSharedKeyFromMnemonic(senderPrvMnemonic, receiverPubKey[0]);
     return {
         encryptedSignedContent: CryptoJS.AES.encrypt(signedContent, sharedKey).toString(),
         signature: signature
     };
 }
 
+// receiverPubKey is an array of two public keys [ECDH, EdDSA]
 export async function sendMessage(content, conversationId, senderPrvMnemonic, receiverPubKey) {
     const {encryptedSignedContent, signature} =  await safeMessage(content, senderPrvMnemonic, receiverPubKey);
     return new Promise((resolve, reject) => {
@@ -63,20 +68,19 @@ export async function sendMessage(content, conversationId, senderPrvMnemonic, re
     });
 }
 
-export async function decryptConversation(conversation, prvMnemonic, targetPubKey) {
-    const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, targetPubKey);
+// targetPubKey is an array of two public keys [ECDH, EdDSA]
+export async function decryptConversation(conversation, prvMnemonic, targetPubKeys) {
+    const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, targetPubKeys[0]);
     for (const message of conversation.messages) {
         const decryptedMessage = CryptoJS.AES.decrypt(message.content, sharedKey).toString(CryptoJS.enc.Latin1);
         const {content, signature} = JSON.parse(decryptedMessage);
 
-        const senderPubKeyStr = conversation.user_1.id === message.sender_id ? conversation.user_1.public_key : conversation.user_2.public_key;
+        const senderPubKeyStr = conversation.user_1.id === message.sender_id ?
+            conversation.user_1.public_key_eddsa : conversation.user_2.public_key_eddsa;
 
-        const kk = ec_ed25519.keyFromSecret(getSeed(prvMnemonic)).getPublic('hex');
-
-        const senderPubKey = ec_ed25519.keyFromPublic(senderPubKeyStr, 'hex')
-        console.log(kk);
+        const senderPubKey = eddsa_ed25519.keyFromPublic(senderPubKeyStr, 'hex')
         const isValid = senderPubKey.verify(CryptoJS.lib.WordArray.create(content), signature);
-        console.log(isValid, senderPubKeyStr);
+        message.content = content;
 
         if (!isValid) {
             toaster('error', 'Message is not valid');

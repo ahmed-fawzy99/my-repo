@@ -14,7 +14,7 @@ const props = defineProps({
 });
 
 const activeConversation = ref(props.conversations.data[3].id);
-const secretKey = ref('announce pill allow truck attract rhythm click limit duty pass devote despair');
+const secretKey = ref('drink trumpet submit room evil badge prize typical soda rocket rally brother');
 const messageInput = ref('');
 const conversationMessagesCount = ref(0);
 const attrs = useAttrs()
@@ -31,7 +31,7 @@ const getOtherParty = () => {
     return conversation.user_1.id === attrs.auth.user.id ? conversation.user_2 : conversation.user_1;
 }
 const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, receiverPubKey) => {
-    if (!receiverPubKey){
+    if (receiverPubKey.some(el => el === null || el === undefined)) {
         toaster('error', 'Receiver public key not found');
         messageInput.value = '';
         return;
@@ -63,12 +63,11 @@ onMounted(() => {
     document.getElementById('chat').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             if (messageInput.value) {
-                send(messageInput.value, activeConversation.value, secretKey.value, attrs.auth.user.public_key, getOtherParty().public_key);
+                send(messageInput.value, activeConversation.value, secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
             }
         }
     });
-    decryptConversation(props.conversations.data[3], secretKey.value, getOtherParty().public_key);
-
+    decryptConversation(props.conversations.data[3], secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
 });
 
 
@@ -87,7 +86,6 @@ onMounted(() => {
                 <TextInput v-model="secretKey" type="text" class="w-full !p-1.5"
                            placeholder="Enter your secret word"/>
             </div>
-            <p class="">{{conversations.data[3]}}</p>
 
             <div class="h-[calc(100vh-4rem)] w-full grid grid-cols-12 dark:bg-base-950">
 
@@ -143,6 +141,7 @@ onMounted(() => {
                         </div>
                         <span class="pi pi-trash me-4"/>
                     </div>
+                    <p class="">{{conversations.data[3]}}</p>
 
                     <div v-if="conversationMessagesCount" class="p-4 min-h-full">
                         <ChatBubble
@@ -176,7 +175,7 @@ onMounted(() => {
                                     dark:placeholder-base-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                    placeholder="Your message..."/>
                             <Link type="submit" href="#"
-                                  @click="send(messageInput, activeConversation, secretKey, $attrs.auth.user.public_key ,getOtherParty().public_key)"
+                                  @click="send(messageInput, activeConversation, secretKey, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa])"
                                   class="inline-flex justify-center p-2 text-primary-600 rounded-full
                                 cursor-pointer hover:bg-primary-100 dark:text-primary-500 dark:hover:bg-base-600">
 

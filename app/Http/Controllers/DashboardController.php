@@ -11,7 +11,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request): Response | RedirectResponse
     {
-        if (!auth()->user()->public_key) {
+        if (!auth()->user()->public_key_ecdh || !auth()->user()->public_key_eddsa) {
             return redirect()->route('register-keys');
         }
         $sortDir = 'asc';

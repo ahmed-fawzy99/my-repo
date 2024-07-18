@@ -68,7 +68,7 @@ class ProfileController extends Controller
 
     public function getKeys(): Response | RedirectResponse
     {
-        if (auth()->user()->public_key) {
+        if (auth()->user()->public_key_ecdh && auth()->user()->public_key_eddsa) {
             return Redirect('/dashboard');
         }
         return Inertia::render('Profile/RegisterKey');
@@ -77,9 +77,13 @@ class ProfileController extends Controller
     public function finalize(Request $request): Response | RedirectResponse
     {
         $validated = $request->validate([
-            'publicKey' => 'required|string',
+            'publicKeyEcdh' => 'required|string',
+            'publicKeyEddsa' => 'required|string',
         ]);
-        auth()->user()->update([ 'public_key' => $validated['publicKey'] ]);
+        auth()->user()->update([
+            'public_key_ecdh' => $validated['publicKeyEcdh'],
+            'public_key_eddsa' => $validated['publicKeyEddsa']
+            ]);
         return Redirect('/dashboard');
     }
 }

@@ -7,30 +7,25 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 import elliptic from "elliptic";
 import {generateMnemonic, mnemonicToSeed} from "bip39";
 import Swal from "sweetalert2";
-import {copyToClipboard} from "@/js-helpers/generic-helpers.js";
+import {copyToClipboard, Toast} from "@/js-helpers/generic-helpers.js";
 
-const Toast = Swal.mixin({
-    toast: true,
-    position: "top-right",
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-        toast.onmouseenter = Swal.stopTimer;
-        toast.onmouseleave = Swal.resumeTimer;
-    }
-});
 const mnemonic = ref('')
-const publicKey = ref('')
+const publicKeyEcdh = ref('')
+const publicKeyEddsa = ref('')
 const keyConfirmation = ref(false)
 const processing = ref(true);
 
 async function generateKey() {
     mnemonic.value = generateMnemonic(128);
     const seed = (await mnemonicToSeed(mnemonic.value)).toString('hex')
-    const ec = new elliptic.ec("curve25519");
-    const keyPair = ec.keyFromPrivate(seed);
-    publicKey.value = keyPair.getPublic('hex');
+    const ecdh = new elliptic.ec("curve25519");
+    const eddsa = new elliptic.eddsa("ed25519");
+
+    const keyPairEcdh = ecdh.keyFromPrivate(seed);
+    const keyPairEddsa = eddsa.keyFromSecret(seed);
+
+    publicKeyEcdh.value = keyPairEcdh.getPublic('hex');
+    publicKeyEddsa.value = keyPairEddsa.getPublic('hex');
     processing.value = false;
 }
 
@@ -74,7 +69,7 @@ onMounted(() => {
                 </label>
             </div>
 
-            <PrimaryButton @click="router.get(route('finalize-reg', {publicKey}))" class="ms-4"
+            <PrimaryButton @click="router.get(route('finalize-reg', {publicKeyEcdh, publicKeyEddsa}))" class="ms-4"
                            :disabled="!keyConfirmation" :class="{ 'opacity-25 cursor-not-allowed': !keyConfirmation }">
                 Log in
             </PrimaryButton>

@@ -27,7 +27,8 @@ class User extends Authenticatable implements HasMedia
         'name',
         'email',
         'password',
-        'public_key',
+        'public_key_ecdh',
+        'public_key_eddsa',
     ];
 
     /**
