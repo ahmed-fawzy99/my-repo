@@ -18,6 +18,7 @@ const processing = ref(true);
 async function generateKey() {
     mnemonic.value = generateMnemonic(128);
     const seed = (await mnemonicToSeed(mnemonic.value)).toString('hex')
+
     const ecdh = new elliptic.ec("curve25519");
     const eddsa = new elliptic.eddsa("ed25519");
 

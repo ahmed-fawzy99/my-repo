@@ -31,15 +31,15 @@ export async function getSharedKeyFromMnemonic(PrvMnemonic, receiverPubKey) {
     const senderKeyPair = await getEllipticKeyPairFromMnemonic(PrvMnemonic, "ecdh");
     return getSharedKey(senderKeyPair, receiverPubKey);
 }
-function signMessage(PrvMnemonic, message) {
-    const wordArray = CryptoJS.lib.WordArray.create(message);
-    const key = eddsa_ed25519.keyFromSecret(getSeed(PrvMnemonic));
-    return key.sign(wordArray).toHex(); // signature
+async function signMessage(PrvMnemonic, message) {
+    // const wordArray = CryptoJS.lib.WordArray.create(message);
+    const key = eddsa_ed25519.keyFromSecret(await getSeed(PrvMnemonic));
+    return key.sign(message).toHex(); // signature
 }
 
 // receiverPubKey is an array of two public keys [ECDH, EdDSA]
 async function safeMessage(content, senderPrvMnemonic, receiverPubKey) {
-    const signature = signMessage(senderPrvMnemonic, content);
+    const signature = await signMessage(senderPrvMnemonic, content);
     const signedContent = JSON.stringify({content, signature});
     const sharedKey = await getSharedKeyFromMnemonic(senderPrvMnemonic, receiverPubKey[0]);
     return {
@@ -72,6 +72,7 @@ export async function sendMessage(content, conversationId, senderPrvMnemonic, re
 export async function decryptConversation(conversation, prvMnemonic, targetPubKeys) {
     const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, targetPubKeys[0]);
     for (const message of conversation.messages) {
+        if (message.content === '') continue;
         const decryptedMessage = CryptoJS.AES.decrypt(message.content, sharedKey).toString(CryptoJS.enc.Latin1);
         const {content, signature} = JSON.parse(decryptedMessage);
 
@@ -79,43 +80,66 @@ export async function decryptConversation(conversation, prvMnemonic, targetPubKe
             conversation.user_1.public_key_eddsa : conversation.user_2.public_key_eddsa;
 
         const senderPubKey = eddsa_ed25519.keyFromPublic(senderPubKeyStr, 'hex')
-        const isValid = senderPubKey.verify(CryptoJS.lib.WordArray.create(content), signature);
+        const isValid = senderPubKey.verify(content, signature);
         message.content = content;
 
         if (!isValid) {
             toaster('error', 'Message is not valid');
+            message.content = '[INVALID CONTENT] ' + message.content;
             return false;
         }
         message.content = content;
     }
 }
 export function deleteMessage(id) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "The message will be deleted for both you and the recipient!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            router.delete(route('messages.destroy', {id: id}), {
-                preserveScroll: true,
-                preserveState: true,
-                onError: (e) => {
-                    Toast.fire({
-                        icon: 'error',
-                        title: Object.values(e)
-                    });
-                },
-                onSuccess: () => {
-                    Toast.fire({
-                        icon: "success",
-                        title: "Message deleted successfully!"
-                    });
-                },
-            });
-        }
+    return new Promise((resolve, reject) => {
+
+        router.delete(route('messages.destroy', {id: id}), {
+            preserveScroll: true,
+            onError: (e) => {
+                Toast.fire({
+                    icon: 'error',
+                    title: Object.values(e)
+                });
+                reject(e);
+            },
+            onSuccess: () => {
+                Toast.fire({
+                    icon: "success",
+                    title: "Message deleted successfully!"
+                });
+                resolve(1);
+            },
+        });
+        //
+        // Swal.fire({
+        //     title: 'Are you sure?',
+        //     text: "The message will be deleted for both you and the recipient!",
+        //     icon: 'warning',
+        //     showCancelButton: true,
+        //     confirmButtonColor: '#d33',
+        //     cancelButtonColor: '#3085d6',
+        //     confirmButtonText: 'Yes, delete it!'
+        // }).then((result) => {
+        //     if (result.isConfirmed) {
+        //         router.delete(route('messages.destroy', {id: id}), {
+        //             preserveScroll: true,
+        //             onError: (e) => {
+        //                 Toast.fire({
+        //                     icon: 'error',
+        //                     title: Object.values(e)
+        //                 });
+        //                 reject(e);
+        //             },
+        //             onSuccess: () => {
+        //                 Toast.fire({
+        //                     icon: "success",
+        //                     title: "Message deleted successfully!"
+        //                 });
+        //                 resolve(1);
+        //             },
+        //         });
+        //     }
+        // });
     });
 }

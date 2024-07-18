@@ -3,7 +3,6 @@ import {Link} from '@inertiajs/vue3';
 import {onMounted} from "vue";
 import {initDropdowns} from "flowbite";
 import {copyToClipboard} from "@/js-helpers/generic-helpers.js";
-import {deleteMessage} from "@/js-helpers/chat-helpers.js";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime)
@@ -69,7 +68,7 @@ onMounted(() => {
                     <Link @click="copyToClipboard(msg.content)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Copy</Link>
                 </li>
                 <li v-if="msg.sender_id === msg.auth_id && msg.content !== ''">
-                    <Link @click="deleteMessage(msg.id)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Delete</Link>
+                    <Link @click="$emit('deleteMessage', msg.id)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Delete</Link>
                 </li>
             </ul>
         </div>

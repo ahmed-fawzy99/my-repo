@@ -63,9 +63,15 @@ class User extends Authenticatable implements HasMedia
             ->withTimestamps();
     }
 
+
+    private function conversations_2(): hasMany
+    {
+        return $this->hasMany(Conversation::class, 'user_2');
+
+    }
     public function conversations(): HasMany
     {
-        return $this->hasMany(Conversation::class, 'user_1');
+        return $this->hasMany(Conversation::class, 'user_1')->merge($this->conversations_2());
     }
 
     public function sendMessage(String $conversationId, String $msg, String $signature): void

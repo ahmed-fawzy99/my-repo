@@ -1,7 +1,7 @@
 <script setup>
 import {Head, Link} from '@inertiajs/vue3';
 import {onMounted, ref, useAttrs, watch} from "vue";
-import {decryptConversation, sendMessage, validatePrivateKey} from "@/js-helpers/chat-helpers.js";
+import {decryptConversation, deleteMessage, sendMessage, validatePrivateKey} from "@/js-helpers/chat-helpers.js";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import ConversationTabs from "@/Components/Tabs/ConversationTabs.vue";
 import ChatBubble from "@/Components/ChatBubble.vue";
@@ -13,26 +13,29 @@ const props = defineProps({
     conversations: Object,
 });
 
-const activeConversation = ref(props.conversations.data[3].id);
-const secretKey = ref('drink trumpet submit room evil badge prize typical soda rocket rally brother');
+const activeConversationId = ref(props.conversations.data[3]?.id ?? null);
+const secretKey = ref('crowd exile shield embark tornado pencil road fluid already capital roof supply');
 const messageInput = ref('');
 const conversationMessagesCount = ref(0);
 const attrs = useAttrs()
 
+const getActiveConversation = () => {
+    return activeConversationId ? props.conversations.data.filter(convo => convo.id === activeConversationId.value)[0] : null;
+}
 const setActiveConversation = (conversationId) => {
-    activeConversation.value = conversationId;
+    activeConversationId.value = conversationId;
 }
 const getSenderName = (message) => {
-    const conversation = props.conversations.data.filter(convo => convo.id === activeConversation.value)[0];
+    const conversation = getActiveConversation();
     return message.sender_id === conversation.user_1.id ? conversation.user_1.name : conversation.user_2.name;
 }
 const getOtherParty = () => {
-    const conversation = props.conversations.data.filter(convo => convo.id === activeConversation.value)[0];
+    const conversation = getActiveConversation();
     return conversation.user_1.id === attrs.auth.user.id ? conversation.user_2 : conversation.user_1;
 }
 const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, receiverPubKey) => {
     if (receiverPubKey.some(el => el === null || el === undefined)) {
-        toaster('error', 'Receiver public key not found');
+        toaster('error', 'Receiver public key not found. Please ask them to finalize their registeration');
         messageInput.value = '';
         return;
     }
@@ -42,6 +45,7 @@ const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, re
         return;
     }
     await sendMessage(message, conversationId, senderPrvMnemonic, receiverPubKey);
+    await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
     messageInput.value = '';
     const chatContent = document.getElementById('chat-content');
     if (conversationMessagesCount.value) {
@@ -52,18 +56,31 @@ const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, re
     }
     countConversationMessages();
 }
+
+const deleteMsg = async (msgId) => {
+    await deleteMessage(msgId);
+    await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+    sortMsgs(getActiveConversation().messages);
+    console.log("MSG CONTENT : " + getActiveConversation().messages.map(msg => msg.content));
+}
 const countConversationMessages = () => {
-    conversationMessagesCount.value = props.conversations.data.filter(convo => convo.id === activeConversation.value)[0].messages.length;
+    conversationMessagesCount.value = getActiveConversation().messages.length;
     return conversationMessagesCount.value;
 };
-watch(activeConversation, countConversationMessages);
+
+watch(activeConversationId, countConversationMessages);
+
+const sortMsgs = (msgs) => {
+    return msgs.sort((a, b) => a.id - b.id);
+}
+
 onMounted(() => {
     countConversationMessages();
-
+    sortMsgs(getActiveConversation().messages);
     document.getElementById('chat').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             if (messageInput.value) {
-                send(messageInput.value, activeConversation.value, secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+                send(messageInput.value, activeConversationId.value, secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
             }
         }
     });
@@ -141,23 +158,24 @@ onMounted(() => {
                         </div>
                         <span class="pi pi-trash me-4"/>
                     </div>
-                    <p class="">{{conversations.data[3]}}</p>
+                    <p class="">{{conversations.data[3].messages.map(msg => msg.content)}}</p>
 
                     <div v-if="conversationMessagesCount" class="p-4 min-h-full">
                         <ChatBubble
                             :id="Math.random().toString(36).slice(2, 5)"
-                            v-for="message in conversations.data.filter(convo => convo.id === activeConversation)[0].messages"
+                            v-for="message in getActiveConversation().messages"
                             class="mb-4"
                             :isSender="message.sender_id === $attrs.auth.user.id"
-                            :msg="{
-                        id: message.id,
-                        sender_id: message.sender_id,
-                        auth_id: $attrs.auth.user.id,
-                        name: getSenderName(message),
-                        content: message.content,
-                        time: message.created_at,
-                        read: message.is_read
-                    }"
+                            :msg.sync="{
+                                id: message.id,
+                                sender_id: message.sender_id,
+                                auth_id: $attrs.auth.user.id,
+                                name: getSenderName(message),
+                                content: message.content,
+                                time: message.created_at,
+                                read: message.is_read
+                            }"
+                            @deleteMessage="deleteMsg"
                         >
                         </ChatBubble>
                     </div>
@@ -175,7 +193,7 @@ onMounted(() => {
                                     dark:placeholder-base-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                    placeholder="Your message..."/>
                             <Link type="submit" href="#"
-                                  @click="send(messageInput, activeConversation, secretKey, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa])"
+                                  @click="send(messageInput, activeConversationId, secretKey, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa])"
                                   class="inline-flex justify-center p-2 text-primary-600 rounded-full
                                 cursor-pointer hover:bg-primary-100 dark:text-primary-500 dark:hover:bg-base-600">
 

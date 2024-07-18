@@ -50,16 +50,16 @@ import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
                 </DescriptionListItem>
                 <DescriptionListItem>
                     <DT>Public Key 1
-                        <ToolTip direction="right">
-                            This is your public key. FURTHER EXPLAINATION TO BE PUT HERE
+                        <ToolTip direction="top">
+                            This is your ECDH public key, which is used for key exchange with other users.
                         </ToolTip>
                     </DT>
                     <DD>{{ $attrs.auth.user.public_key_ecdh }}</DD>
                 </DescriptionListItem>
                 <DescriptionListItem>
                     <DT>Public Key 2
-                        <ToolTip direction="right">
-                            This is your public key. FURTHER EXPLAINATION TO BE PUT HERE
+                        <ToolTip direction="top">
+                            This is your EdDSA public key, which is used for signing and verifying messages.
                         </ToolTip>
                     </DT>
                     <DD>{{ $attrs.auth.user.public_key_eddsa }}</DD>

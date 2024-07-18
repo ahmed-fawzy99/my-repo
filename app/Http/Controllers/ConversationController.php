@@ -13,7 +13,9 @@ class ConversationController extends Controller
     public function index()
     {
         return inertia('Conversation/Conversations', [
-            'conversations' => auth()->user()->conversations()->with('user_1', 'user_2', 'messages')->paginate(10),
+            'conversations' => auth()->user()->conversations()
+                ->with('user_1', 'user_2', 'messages')
+                ->paginate(10),
         ]);
     }
 

@@ -70,7 +70,10 @@ class MessageController extends Controller
     public function destroy(Message $message)
     {
         if ($message->sender_id === auth()->id()) {
-            $message->update(['content' => '']);
+            $message->content = '';
+            $message->signature = '';
+            $message->save();
+            return redirect()->back();
         } else {
             throw new \Exception('Unauthorized');
         }
