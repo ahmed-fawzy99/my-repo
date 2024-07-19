@@ -1,5 +1,6 @@
 <script setup>
 import NavLink from "@/Components/NavLink.vue";
+import GoBackNavLink from "@/Components/GoBackNavLink.vue";
 
 defineProps({
     inCount: Number,
@@ -8,7 +9,7 @@ defineProps({
 </script>
 
 <template>
-<!--    <GoBackNavLink/>-->
+    <GoBackNavLink/>
 
     <NavLink :href="route('conversations.index')" :active="route().current('conversations.index')">
         My Conversations

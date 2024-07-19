@@ -29,7 +29,7 @@ class MessageController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'content' => 'required',
+            'content' => 'required|string|min:1',
             'conversationId' => 'required|ulid',
             'signature' => 'required|string|size:128',
         ]);

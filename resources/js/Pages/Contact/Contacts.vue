@@ -2,7 +2,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {Head, router, Link} from '@inertiajs/vue3';
 import Card from "@/Components/Card.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
 import ContactCard from "@/Components/ContactCard.vue";
 import ContactTabs from "@/Components/Tabs/ContactTabs.vue";
 import {ref, watch} from "vue";
@@ -26,6 +25,10 @@ watch(term, search);
 
 const selectedContacts = ref([]);
 
+const openConversation = (contactId) => {
+    router.get(route('conversations.index', {contactId}),
+        {preserveState: true, preserveScroll: true});
+}
 const trackSelectedContacts = (event, id, name) => {
     if (event.target.checked) {
         selectedContacts.value.push({id, name});
@@ -68,7 +71,7 @@ const trackSelectedContacts = (event, id, name) => {
                         </li>
                     </template>
                     <template #action>
-                        <Link v-if="selectedContacts.length" @click="selectedContacts = []; sendContactRequest(selectedContacts.map(contact => contact.id))" href="#"
+                        <Link v-if="selectedContacts.length" @click="sendContactRequest(selectedContacts.map(contact => contact.id)); selectedContacts = []; " href="#"
                               class="flex items-center p-3 text-sm font-medium text-primary-600 dark:text-primary-400 border-t border-base-200 rounded-b-lg bg-base-50 dark:border-base-600 hover:bg-base-100 dark:bg-base-700 dark:hover:bg-base-600  hover:underline">
                             <span class="pi pi-user-plus mr-2" />
                             Send a Request
@@ -81,7 +84,7 @@ const trackSelectedContacts = (event, id, name) => {
         <Card>
             <div v-if="contacts.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto">
                 <ContactCard v-for="contact in contacts" :key="contact.id"
-                    :id="Math.random().toString(36).slice(2, 5)"
+                    :id="Math.random().toString(36).slice(2, 5)" @openConversation="openConversation"
                     :name="contact.name" :email="contact.email" :contactId="contact.id"
                 />
             </div>

@@ -43,12 +43,6 @@ defineProps({
                         <Link
                             class="flex items-center justify-center w-12 h-12 mt-2 rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
-                            :href="route('profile.edit')">
-                            <span class="pi pi-cog scale-125 text-base-700 dark:text-base-200"/>
-                        </Link>
-                        <Link
-                            class="flex items-center justify-center w-12 h-12 mt-2 rounded
-                            hover:bg-base-400 dark:hover:bg-base-700"
                             :href="route('contacts.index')">
                             <span class="pi pi-users scale-125 text-base-700 dark:text-base-200"/>
                         </Link>
@@ -62,6 +56,12 @@ defineProps({
 
                 </div>
                 <div class="flex flex-col items-center border-base-700 mb-2">
+                    <Link
+                        class="flex items-center justify-center w-12 h-12 mt-2 rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                        :href="route('profile.edit')">
+                        <span class="pi pi-cog scale-125 text-base-700 dark:text-base-200"/>
+                    </Link>
                     <Link
                         class="flex items-center justify-center w-12 h-12 mt-2 rounded
                          hover:bg-base-400 dark:hover:bg-base-700"
@@ -83,7 +83,7 @@ defineProps({
         <div class="ml-16 min-h-screen flex-grow bg-base-100 dark:bg-base-900">
             <nav class="bg-white dark:bg-base-900 border-b border-base-100 dark:border-base-700  shadow-sm">
                 <!-- Primary Navigation Menu -->
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class=" mx-auto px-4 sm:px-6 lg:px-8" :class="{'max-w-7xl' : !freeContent}">
                     <div class="flex justify-between h-16">
                         <div class="flex">
                             <!-- Navigation Links -->

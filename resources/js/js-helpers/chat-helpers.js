@@ -9,7 +9,7 @@ const ecdh_25519 = new elliptic.ec('curve25519');         // ECDH for curve25519
 const eddsa_ed25519 = new elliptic.eddsa('ed25519');   // EdDSA for Ed25519 - For signing
 
 async function getSeed(mnemonicPhrase) {
-    return (await mnemonicToSeed(mnemonicPhrase)).toString('hex');
+    return (await mnemonicToSeed(mnemonicPhrase)).toString();
 }
 async function getEllipticKeyPairFromMnemonic(mnemonicPhrase, mode) {
     const seed = await getSeed(mnemonicPhrase);
@@ -18,7 +18,6 @@ async function getEllipticKeyPairFromMnemonic(mnemonicPhrase, mode) {
 export async function validatePrivateKey(mnemonicPhrase, publicKeys) {
     const senderKeyEcdh =  await getEllipticKeyPairFromMnemonic(mnemonicPhrase, "ecdh");
     const senderKeyEddsa =  await getEllipticKeyPairFromMnemonic(mnemonicPhrase, "eddsa");
-
     const senderPublKeyEcdh = senderKeyEcdh.getPublic('hex');
     const senderPublKeyEddsa = senderKeyEddsa.getPublic('hex');
     return senderPublKeyEcdh === publicKeys[0] && senderPublKeyEddsa === publicKeys[1];
@@ -69,26 +68,44 @@ export async function sendMessage(content, conversationId, senderPrvMnemonic, re
 }
 
 // targetPubKey is an array of two public keys [ECDH, EdDSA]
-export async function decryptConversation(conversation, prvMnemonic, targetPubKeys) {
+export async function decryptConversation(conversation, prvMnemonic, targetPubKeys, srcPubKeys = null) {
     const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, targetPubKeys[0]);
+
+    let isValidKey = false;
+    if(srcPubKeys){
+         isValidKey = await validatePrivateKey(prvMnemonic, srcPubKeys);
+    }
     for (const message of conversation.messages) {
         if (message.content === '') continue;
-        const decryptedMessage = CryptoJS.AES.decrypt(message.content, sharedKey).toString(CryptoJS.enc.Latin1);
-        const {content, signature} = JSON.parse(decryptedMessage);
+        message.encrypted = true;
+        message.invalid = false;
+        try {
+            if (!message.content.startsWith('U2FsdGVkX1') && isValidKey){
+                message.encrypted = false;
+                continue;
+            }
+            const decryptedMessage = CryptoJS.AES.decrypt(message.content, sharedKey).toString(CryptoJS.enc.Latin1);
 
-        const senderPubKeyStr = conversation.user_1.id === message.sender_id ?
-            conversation.user_1.public_key_eddsa : conversation.user_2.public_key_eddsa;
+            const {content, signature} = JSON.parse(decryptedMessage);
 
-        const senderPubKey = eddsa_ed25519.keyFromPublic(senderPubKeyStr, 'hex')
-        const isValid = senderPubKey.verify(content, signature);
-        message.content = content;
+            const senderPubKeyStr = conversation.user_1.id === message.sender_id ?
+                conversation.user_1.public_key_eddsa : conversation.user_2.public_key_eddsa;
 
-        if (!isValid) {
-            toaster('error', 'Message is not valid');
-            message.content = '[INVALID CONTENT] ' + message.content;
-            return false;
+            const senderPubKey = eddsa_ed25519.keyFromPublic(senderPubKeyStr, 'hex')
+            const isValid = senderPubKey.verify(content, signature);
+
+            message.content = content;
+
+            if (!isValid) {
+                toaster('error', 'Message is not valid');
+                message.invalid = true;
+                return false;
+            }
+            message.content = content;
+            message.encrypted = false;
+        } catch {
         }
-        message.content = content;
+
     }
 }
 export function deleteMessage(id) {

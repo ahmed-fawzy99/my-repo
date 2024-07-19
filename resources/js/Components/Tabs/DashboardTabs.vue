@@ -1,9 +1,10 @@
 <script setup>
 import NavLink from "@/Components/NavLink.vue";
+import GoBackNavLink from "@/Components/GoBackNavLink.vue";
 </script>
 
 <template>
-<!--    <GoBackNavLink/>-->
+    <GoBackNavLink/>
 
     <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
         Dashboard

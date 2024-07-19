@@ -17,16 +17,16 @@ const processing = ref(true);
 
 async function generateKey() {
     mnemonic.value = generateMnemonic(128);
-    const seed = (await mnemonicToSeed(mnemonic.value)).toString('hex')
+    const seed = (await mnemonicToSeed(mnemonic.value)).toString()
 
     const ecdh = new elliptic.ec("curve25519");
-    const eddsa = new elliptic.eddsa("ed25519");
-
     const keyPairEcdh = ecdh.keyFromPrivate(seed);
-    const keyPairEddsa = eddsa.keyFromSecret(seed);
-
     publicKeyEcdh.value = keyPairEcdh.getPublic('hex');
+
+    const eddsa = new elliptic.eddsa("ed25519");
+    const keyPairEddsa = eddsa.keyFromSecret(seed);
     publicKeyEddsa.value = keyPairEddsa.getPublic('hex');
+
     processing.value = false;
 }
 
@@ -57,7 +57,7 @@ onMounted(() => {
                 <div class="h-2 bg-gray-300 rounded-full dark:bg-gray-700 mb-2.5"></div>
                 <span class="sr-only">Loading...</span>
             </div>
-            <p v-else class="py-2">{{ mnemonic }}</p>
+            <p v-else class="py-2 break-all">{{ mnemonic }}</p>
         </div>
 
 

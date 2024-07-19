@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -68,6 +69,10 @@ class ContactController extends Controller
             foreach ($validated['selectedContacts'] as $contactId) {
                 $contact = User::find($contactId);
                 auth()->user()->contacts()->attach($contact);
+                Conversation::create([
+                    'user_1' => auth()->id(),
+                    'user_2' => $contactId,
+                ]);
             }
             return redirect()->route('contacts.index');
         } catch (\Exception $e) {
@@ -123,10 +128,23 @@ class ContactController extends Controller
     public function destroy(string $id)
     {
         $contact = User::find($id);
+
+        // Delete Conversations
+        Conversation::where(function ($query) use ($id) {
+            $query->where('user_1', auth()->id())
+                ->where('user_2', $id);
+        })->orWhere(function ($query) use ($id) {
+            $query->where('user_1', $id)
+                ->where('user_2', auth()->id());
+        })->delete();
+
+
+        // Delete Contact
         auth()->user()->contacts()->detach($contact);
         $contact->contacts()->detach(auth()->user());
         return redirect()->route('contacts.index');
     }
+
     // ^^^ inconsistent parameters. stick with either $id or $request.
     public function destroySentRequest(Request $request)
     {

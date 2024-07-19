@@ -71,7 +71,9 @@ class User extends Authenticatable implements HasMedia
     }
     public function conversations(): HasMany
     {
-        return $this->hasMany(Conversation::class, 'user_1')->merge($this->conversations_2());
+//        return $this->hasManyMerged(Conversation::class, ['user_1', 'user_2']);
+
+        return $this->hasMany(Conversation::class, 'user_1')->union($this->conversations_2());
     }
 
     public function sendMessage(String $conversationId, String $msg, String $signature): void

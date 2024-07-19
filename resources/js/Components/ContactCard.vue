@@ -54,7 +54,7 @@ onMounted(() => {
             <h5 class="mb-1 text-xl font-medium text-base-900 dark:text-white">{{ name }}</h5>
             <span class="text-sm text-base-500 dark:text-base-400">{{ email }}</span>
             <div class="flex mt-4 md:mt-6">
-                <Link href="#"
+                <Link href="#" @click="$emit('openConversation', contactId)"
                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
                     <span class="pi pi-send mr-2"/>Message
                 </Link>

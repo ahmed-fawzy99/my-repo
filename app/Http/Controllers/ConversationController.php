@@ -10,12 +10,51 @@ class ConversationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $validated = $request->validate([
+            'contactId' => 'nullable|ulid',
+            'contactSearch' => 'string|nullable',
+        ]);
+
+        // If the request contains a contactId, for redirection purpose
+        if (array_key_exists('contactId', $validated)){
+            $conversation = Conversation::where(function($query) use ($validated) {
+                $query->where('user_1', auth()->id())
+                    ->where('user_2', $validated['contactId']);
+            })->orWhere(function($query) use ($validated) {
+                $query->where('user_1', $validated['contactId'])
+                    ->where('user_2', auth()->id());
+            })->first();
+
+            if (!$conversation) {
+                $conversation = Conversation::create([
+                    'user_1' => auth()->id(),
+                    'user_2' => $validated['contactId'],
+                ]);
+            }
+        } else {
+            $conversation = null;
+        }
+
+
+
+
         return inertia('Conversation/Conversations', [
             'conversations' => auth()->user()->conversations()
                 ->with('user_1', 'user_2', 'messages')
+                ->when($request->contactSearch, function($query, $contactSearch) {
+                    $query->where(function($query) use ($contactSearch) {
+                        $query->whereHas('user_1', function($query) use ($contactSearch) {
+                            $query->where('name', 'ILIKE', '%' . $contactSearch . '%');
+                        })->orWhereHas('user_2', function($query) use ($contactSearch) {
+                            $query->where('name', 'ILIKE', '%' . $contactSearch . '%');
+                        });
+                    });
+                })
                 ->paginate(10),
+
+            'passedConversationId' => $conversation?->id,
         ]);
     }
 

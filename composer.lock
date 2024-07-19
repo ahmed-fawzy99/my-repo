@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1efe573e3657e50f489c309c199fbf8b",
+    "content-hash": "bdb169d16e841facd9334eaf289b0e77",
     "packages": [
         {
             "name": "brick/math",
@@ -1206,6 +1206,61 @@
                 }
             ],
             "time": "2024-06-13T01:25:09+00:00"
+        },
+        {
+            "name": "korridor/laravel-has-many-merged",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/korridor/laravel-has-many-merged.git",
+                "reference": "a27c387cf1c9291ab99359fda02ad3d9bd7b29c2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/korridor/laravel-has-many-merged/zipball/a27c387cf1c9291ab99359fda02ad3d9bd7b29c2",
+                "reference": "a27c387cf1c9291ab99359fda02ad3d9bd7b29c2",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^10|^11",
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3",
+                "nunomaduro/larastan": "^2.0",
+                "orchestra/testbench": "^8|^9",
+                "phpunit/phpunit": "^10",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Korridor\\LaravelHasManyMerged\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "korridor",
+                    "email": "26689068+korridor@users.noreply.github.com"
+                }
+            ],
+            "description": "Custom relationship for Eloquent that merges/combines multiple one-to-may (hasMany) relationships",
+            "homepage": "https://github.com/korridor/laravel-has-many-merged",
+            "keywords": [
+                "eloquent",
+                "has-many",
+                "laravel",
+                "relations"
+            ],
+            "support": {
+                "issues": "https://github.com/korridor/laravel-has-many-merged/issues",
+                "source": "https://github.com/korridor/laravel-has-many-merged/tree/1.1.0"
+            },
+            "time": "2024-02-29T15:33:50+00:00"
         },
         {
             "name": "laravel/framework",

@@ -1,5 +1,5 @@
 <script setup>
-import {Head, Link} from '@inertiajs/vue3';
+import {Head, Link, router} from '@inertiajs/vue3';
 import {onMounted, ref, useAttrs, watch} from "vue";
 import {decryptConversation, deleteMessage, sendMessage, validatePrivateKey} from "@/js-helpers/chat-helpers.js";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -8,16 +8,23 @@ import ChatBubble from "@/Components/ChatBubble.vue";
 import TextInput from "@/Components/TextInput.vue";
 import ToolTip from "@/Components/ToolTip.vue";
 import {toaster} from "@/js-helpers/generic-helpers.js";
+import debounce from "lodash/debounce.js";
 
 const props = defineProps({
     conversations: Object,
+    passedConversationId: {
+        type: String,
+        default: null
+    },
 });
 
-const activeConversationId = ref(props.conversations.data[3]?.id ?? null);
-const secretKey = ref('crowd exile shield embark tornado pencil road fluid already capital roof supply');
-const messageInput = ref('');
-const conversationMessagesCount = ref(0);
 const attrs = useAttrs()
+const activeConversationId = ref(props.passedConversationId ?? (props.conversations.data[0]?.id ?? null));
+const secretKey = ref('');
+const messageInput = ref('');
+const contactSearch = ref('');
+const conversationMessagesCount = ref(0);
+const isValidKey = ref(false);
 
 const getActiveConversation = () => {
     return activeConversationId ? props.conversations.data.filter(convo => convo.id === activeConversationId.value)[0] : null;
@@ -31,16 +38,32 @@ const getSenderName = (message) => {
 }
 const getOtherParty = () => {
     const conversation = getActiveConversation();
+    if (!conversation) {
+        return null;
+    }
     return conversation.user_1.id === attrs.auth.user.id ? conversation.user_2 : conversation.user_1;
 }
+
+const toggleSecretKey = () => {
+    const secretKeyInput = document.getElementById('secret-key');
+    if (secretKeyInput.type === 'password') {
+        secretKeyInput.type = 'text';
+    } else {
+        secretKeyInput.type = 'password';
+    }
+}
 const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, receiverPubKey) => {
-    if (receiverPubKey.some(el => el === null || el === undefined)) {
+    if (!message) { // check if message is empty
+        toaster('error', 'Message cannot be empty');
+        return;
+    }
+    if (receiverPubKey.some(el => !el)) { // check if any of the keys is empty
         toaster('error', 'Receiver public key not found. Please ask them to finalize their registeration');
         messageInput.value = '';
         return;
     }
-    const isCorrectPrv = await validatePrivateKey(senderPrvMnemonic, senderPubKey, receiverPubKey);
-    if (!isCorrectPrv) {
+    const isCorrectPrv = await validatePrivateKey(senderPrvMnemonic, senderPubKey);
+    if (!isCorrectPrv) { // check if secret key is invalid
         toaster('error', 'Invalid Secret Key');
         return;
     }
@@ -58,25 +81,32 @@ const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, re
 }
 
 const deleteMsg = async (msgId) => {
+    const isCorrectPrv = await validatePrivateKey(secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
+    if (!isCorrectPrv) { // check if secret key is invalid
+        toaster('error', 'Invalid Secret Key');
+        return;
+    }
     await deleteMessage(msgId);
     await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
     sortMsgs(getActiveConversation().messages);
     console.log("MSG CONTENT : " + getActiveConversation().messages.map(msg => msg.content));
 }
 const countConversationMessages = () => {
+    if (!getActiveConversation() || !getActiveConversation().messages) {
+        return 0;
+    }
     conversationMessagesCount.value = getActiveConversation().messages.length;
     return conversationMessagesCount.value;
 };
-
-watch(activeConversationId, countConversationMessages);
-
 const sortMsgs = (msgs) => {
     return msgs.sort((a, b) => a.id - b.id);
 }
 
 onMounted(() => {
-    countConversationMessages();
-    sortMsgs(getActiveConversation().messages);
+    if (countConversationMessages()){
+        sortMsgs(getActiveConversation().messages);
+        decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+    }
     document.getElementById('chat').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             if (messageInput.value) {
@@ -84,10 +114,29 @@ onMounted(() => {
             }
         }
     });
-    decryptConversation(props.conversations.data[3], secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
 });
 
+const search = debounce(() => {
+    activeConversationId.value = null;
+    router.visit(route('conversations.index', {contactSearch: contactSearch.value}),
+        {preserveState: true, preserveScroll: true});
+}, 250);
+watch(contactSearch, search);
 
+watch(activeConversationId, async ( newVal, oldVal) => {
+    if (newVal !== oldVal) {
+        if (countConversationMessages()){
+            await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+    }
+}});
+watch(secretKey, async () => {
+    if (secretKey.value.split(' ').length - 1 >= 11){ // for performance, only validate if the key is 12 words
+        isValidKey.value = await validatePrivateKey(secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
+    }
+    if (countConversationMessages()){
+        await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
+    }
+});
 </script>
 
 <template>
@@ -98,32 +147,36 @@ onMounted(() => {
         </template>
         <template #free-content>
             <div
-                class="w-full text-white bg-primary-700 dark:bg-primary-950 text-sm p-1 flex items-center justify-between px-4 gap-4">
+                class="w-full h-12 overflow-hidden text-white  bg-primary-700 dark:bg-primary-950 text-sm p-1 flex items-center justify-between px-4 gap-4">
                 <span class="w-1/3">Paste Your Private Secret Word: <ToolTip>This key will be used to encrypt your outgoing messages <br> and decrypt your conversations.</ToolTip></span>
-                <TextInput v-model="secretKey" type="text" class="w-full !p-1.5"
+                <TextInput v-model="secretKey" type="password" autocomplete="off" class="w-full !p-1.5" id="secret-key"
+                           :class="{ '!border-green-500 ': isValidKey, '!border-red-500': secretKey && !isValidKey }"
+                           :disabled="getActiveConversation() === null"
                            placeholder="Enter your secret word"/>
+                <span @click="toggleSecretKey"
+                      class="pi pi-eye cursor-pointer" />
             </div>
 
-            <div class="h-[calc(100vh-4rem)] w-full grid grid-cols-12 dark:bg-base-950">
+            <div class="h-[calc(100vh-7rem)] w-full grid grid-cols-12 dark:bg-base-950">
 
                 <!-- Conversation Selector -->
-                <div
-                    class="col-span-3 bg-base-200 dark:bg-base-800 shadow-sm border-r border-base-200 dark:border-base-900">
-                    <div class="px-4 py-1.5">
-                        <label for="simple-search" class="sr-only">Search</label>
+                <div  class="col-span-3 bg-base-200 dark:bg-base-800 shadow-sm border-r border-base-200 dark:border-base-900">
+                    <div class="px-4 py-2">
+                        <label for="conversation-search" class="sr-only">Search</label>
                         <div class="relative w-full">
                             <span></span>
-                            <input type="text" id="simple-search" class="bg-base-50 border border-base-300 text-base-900 text-sm rounded-lg
-                        focus:ring-primary-500 focus:border-primary-500 block w-full ps-10
+                            <input type="text" id="conversation-search"  v-model="contactSearch"
+                                   class="bg-base-50 border border-base-300 text-base-900 text-sm rounded-lg
+                        focus:ring-primary-500 focus:border-primary-500 block w-full
                         dark:bg-base-700 dark:border-base-600 dark:placeholder-base-400 dark:text-white
                         dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                   placeholder="Search branch name..." required/>
+                                   placeholder="Search for contact" required/>
                         </div>
                     </div>
-                    <ul class=" ">
+                    <ul v-if="conversations.total">
                         <li v-for="(conversation, index) in conversations.data" :key="conversation.id"
                             @click="setActiveConversation(conversation.id)"
-                            class="p-3 sm:py-4 hover:bg-base-300 dark:hover:bg-base-700 cursor-pointer transition-colors duration-200"
+                            class="p-3 sm:py-4 hover:bg-base-300 dark:hover:bg-base-700 cursor-pointer "
                             :class="{
                         'bg-base-100 dark:bg-base-800': index%2===0,
                         'bg-base-200 dark:bg-base-900': index%2===1,
@@ -146,21 +199,22 @@ onMounted(() => {
                             </div>
                         </li>
                     </ul>
-
+                    <div v-else class="p-4 flex flex-col justify-center items-center">
+                        <span class="pi pi-inbox text-4xl text-base-500 mb-2"/>
+                        <p class="text-base-500">No conversations yet</p>
+                    </div>
                 </div>
 
                 <!-- Chat Screen -->
-                <div class="col-span-9  overflow-y-scroll " id="chat-content">
-                    <div class="sticky top-0 w-full p-3 bg-base-200 dark:bg-base-900 flex justify-between items-center">
+                <div class="col-span-9 overflow-y-scroll " id="chat-content">
+                    <div class="sticky h-12 top-0 w-full p-3 bg-base-200 dark:bg-base-900 flex justify-between items-center">
                         <div class="flex items-center">
                             <span class="pi pi-user text-lg text-black rounded-full p-1 shadow-sm bg-white mr-2"/>
-                            <p class="text-sm">{{ getOtherParty().name }}</p>
+                            <p class="text-sm">{{ conversations.total ? getOtherParty()?.name : null }}</p>
                         </div>
                         <span class="pi pi-trash me-4"/>
                     </div>
-                    <p class="">{{conversations.data[3].messages.map(msg => msg.content)}}</p>
-
-                    <div v-if="conversationMessagesCount" class="p-4 min-h-full">
+                    <div v-if="conversationMessagesCount && activeConversationId" class="p-4  min-h-[calc(100%-7rem)]">
                         <ChatBubble
                             :id="Math.random().toString(36).slice(2, 5)"
                             v-for="message in getActiveConversation().messages"
@@ -172,6 +226,8 @@ onMounted(() => {
                                 auth_id: $attrs.auth.user.id,
                                 name: getSenderName(message),
                                 content: message.content,
+                                encrypted: message.encrypted,
+                                invalid: message.invalid,
                                 time: message.created_at,
                                 read: message.is_read
                             }"
@@ -179,20 +235,20 @@ onMounted(() => {
                         >
                         </ChatBubble>
                     </div>
-                    <div v-else class="p-4 min-h-full flex flex-col justify-center items-center">
+                    <div v-else class="p-4 flex flex-col justify-center items-center h-[calc(100%-7rem)]">
                         <span class="pi pi-inbox text-4xl text-base-500 mb-2"/>
                         <p class="text-base-500">No messages yet</p>
                     </div>
 
-                    <div class="sticky bottom-16 px-4">
+                    <div class="sticky bottom-2 px-4 ">
                         <label for="chat" class="sr-only">Your message</label>
                         <div class="flex items-center px-3 py-2 rounded-2xl bg-base-200 dark:bg-base-700 shadow-md">
-                            <input id="chat" v-model="messageInput" type="text"
+                            <input id="chat" v-model="messageInput" type="text" required
                                    class="block mr-2 p-2.5 w-full text-sm text-base-900 bg-white rounded-2xl
                                     border border-base-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-base-800 dark:border-base-600
                                     dark:placeholder-base-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                    placeholder="Your message..."/>
-                            <Link type="submit" href="#"
+                            <button type="button" href="#"
                                   @click="send(messageInput, activeConversationId, secretKey, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa])"
                                   class="inline-flex justify-center p-2 text-primary-600 rounded-full
                                 cursor-pointer hover:bg-primary-100 dark:text-primary-500 dark:hover:bg-base-600">
@@ -202,7 +258,7 @@ onMounted(() => {
                                 <!--                                <path d="m17.914 18.594-8-18a1 1 0 0 0-1.828 0l-8 18a1 1 0 0 0 1.157 1.376L8 18.281V9a1 1 0 0 1 2 0v9.281l6.758 1.689a1 1 0 0 0 1.156-1.376Z"/>-->
                                 <!--                            </svg>-->
                                 <span class="sr-only">Send message</span>
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </div>

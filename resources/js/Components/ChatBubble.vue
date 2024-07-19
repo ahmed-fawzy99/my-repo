@@ -45,12 +45,18 @@ onMounted(() => {
             <span class="text-xs font-normal text-base-300">{{ dayjs(msg.time).fromNow() + ' - ' + dayjs(msg.time).format('YYYY-MM-DD hh:mm:ss A') }}</span>
 
             <p v-if="msg.content" class="text-sm font-normal py-2.5 text-white break-words">
-                {{ msg.content }}
+                <span v-if="msg.encrypted">
+                    🔒 <span class="italic">[Encrypted Message]</span>
+                </span>
+                <span v-else>
+                    {{ msg.content }}
+                </span>
             </p>
+
             <p v-else class="text-sm italic py-2.5 text-white">
                 [Message Deleted]
             </p>
-            <span class="text-xs font-normal text-base-100">Delivered</span>
+<!--            <span class="text-xs font-normal text-base-100">Delivered</span>-->
         </div>
         <button :id="id+'IconButton'" :data-dropdown-toggle="id" data-dropdown-placement="bottom-start"
                 class="inline-flex self-center items-center p-2 text-sm font-medium text-center text-base-900 bg-white rounded-lg hover:bg-base-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-base-50 dark:bg-base-900 dark:hover:bg-base-800 dark:focus:ring-base-600"
@@ -65,10 +71,10 @@ onMounted(() => {
              class="z-10 hidden bg-white divide-y divide-base-100 rounded-lg shadow w-40 dark:bg-base-700 dark:divide-base-600">
             <ul class="py-2 text-sm text-base-700 dark:text-base-200" :aria-labelledby="id+'IconButton'">
                 <li>
-                    <Link @click="copyToClipboard(msg.content)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Copy</Link>
+                    <a @click="copyToClipboard(msg.content)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Copy</a>
                 </li>
                 <li v-if="msg.sender_id === msg.auth_id && msg.content !== ''">
-                    <Link @click="$emit('deleteMessage', msg.id)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Delete</Link>
+                    <a @click="$emit('deleteMessage', msg.id)" href="#" class="block px-4 py-2 hover:bg-base-100 dark:hover:bg-base-600 dark:hover:text-white">Delete</a>
                 </li>
             </ul>
         </div>

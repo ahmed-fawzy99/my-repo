@@ -10,6 +10,7 @@ class Conversation extends Model
 {
     use HasFactory, HasUlids;
 
+    protected $fillable = ['user_1', 'user_2'];
     /**
      * The boot method is called when the model is initialized.
      * It is used to define model event hooks.
