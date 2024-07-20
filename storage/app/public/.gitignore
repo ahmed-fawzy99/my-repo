@@ -1,2 +1,6 @@
 *
 !.gitignore
+!img/
+!img/*
+!sounds/
+!sounds/*
