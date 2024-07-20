@@ -61,17 +61,6 @@ class DatabaseSeeder extends Seeder
             'user_1' => $root->id,
             'user_2' => $root2->id,
         ]);
-        Message::create([
-            'conversation_id' => $convo->id,
-            'sender_id' => $root->id,
-            'content' => 'Hello World',
-            'signature' => '0DFCFC18188978B11AD410BD8C8DA062A8C8DCF67D1EE418D4EC6E8C2EB59B4D723C5723F91CC4AA691D55F03A57E131A4232C11CEAB04BE6014779087796700',
-        ]);
-        Message::create([
-            'conversation_id' => $convo->id,
-            'sender_id' => $root2->id,
-            'content' => 'NOOOOO ',
-            'signature' => '0DFCFC18188978B11AD410BD8C8DA062A8C8DCF67D1EE418D4EC6E8C2EB59B4D723C5723F91CC4AA691D55F03A57E131A4232C11CEAB04BE6014779087796700',
-        ]);
+
     }
 }

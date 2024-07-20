@@ -24,6 +24,7 @@ onMounted(() => {
 </script>
 
 <template>
+
     <div class="flex items-start gap-2.5"
          :class="{
                 'flex-row-reverse': isSender,
@@ -35,14 +36,14 @@ onMounted(() => {
                     'bg-orange-500 shadow-orange-600/30': !isSender,
                 }"
         />
-        <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-base-200 "
+
+        <div v-if="!msg.processing"  class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-base-200 "
              :class="{
                     'rounded-e-xl rounded-es-xl bg-orange-600': !isSender,
                     'rounded-s-xl rounded-ee-xl bg-primary-700 ': isSender,
                 }">
-
             <span class="text-sm font-semibold text-white">{{ msg.name }}</span>
-            <span class="text-xs font-normal text-base-300">{{ dayjs(msg.time).fromNow() + ' - ' + dayjs(msg.time).format('YYYY-MM-DD hh:mm:ss A') }}</span>
+            <span class="text-xs font-normal text-base-300">{{ dayjs(msg.time).fromNow() + ' - ' + dayjs(msg.time).format('YYYY-MM-DD h:mm A') }}</span>
 
             <p v-if="msg.content" class="text-sm font-normal py-2.5 text-white break-words">
                 <span v-if="msg.encrypted">
@@ -52,12 +53,27 @@ onMounted(() => {
                     {{ msg.content }}
                 </span>
             </p>
-
             <p v-else class="text-sm italic py-2.5 text-white">
                 [Message Deleted]
             </p>
-<!--            <span class="text-xs font-normal text-base-100">Delivered</span>-->
+            <span v-if="msg.read && msg.sender_id === msg.auth_id" class="text-xs font-normal text-base-100">Seen</span>
         </div>
+
+        <!-- Processing -->
+        <div v-else  class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-base-200"
+             :class="{
+                    'rounded-e-xl rounded-es-xl bg-orange-600': !isSender,
+                    'rounded-s-xl rounded-ee-xl bg-primary-700 ': isSender,
+                }">
+            <div class="animate-pulse">
+                <div class="h-1.5 bg-base-300 rounded-full w-full mb-1"></div>
+                <div class="h-1.5 bg-base-300 rounded-full w-full mb-1"></div>
+                <div class="h-1.5 bg-base-300 rounded-full w-1/2 mb-1"></div>
+                <p class="text-sm mt-2">Decrypting...</p>
+            </div>
+
+        </div>
+
         <button :id="id+'IconButton'" :data-dropdown-toggle="id" data-dropdown-placement="bottom-start"
                 class="inline-flex self-center items-center p-2 text-sm font-medium text-center text-base-900 bg-white rounded-lg hover:bg-base-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-base-50 dark:bg-base-900 dark:hover:bg-base-800 dark:focus:ring-base-600"
                 type="button">
@@ -79,6 +95,7 @@ onMounted(() => {
             </ul>
         </div>
     </div>
+
 </template>
 
 <style scoped>

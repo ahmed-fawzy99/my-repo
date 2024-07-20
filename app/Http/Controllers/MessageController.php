@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Http\Request;
 
 class MessageController extends Controller
@@ -33,8 +36,20 @@ class MessageController extends Controller
             'conversationId' => 'required|ulid',
             'signature' => 'required|string|size:128',
         ]);
+
         if (auth()->user()->conversations->contains($validated['conversationId'])) {
-            auth()->user()->sendMessage($validated['conversationId'], $validated['content'], $validated['signature']);
+            // Mark previous senders' messages as read.
+            Message::where('conversation_id', $validated['conversationId'])
+                ->where('sender_id', '!=', auth()->id())->update([
+                    'is_read' => true,
+                ]);
+
+            // Send the message
+            $msg = auth()->user()->sendMessage($validated['conversationId'], $validated['content'], $validated['signature']);
+
+            // Notify the other user
+            User::find($msg->recipientId())->notify(new NewMessageNotification($msg));
+
             return redirect()->back();
         }
         throw new \Exception('Unauthorized');

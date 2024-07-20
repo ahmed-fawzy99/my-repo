@@ -76,13 +76,15 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(Conversation::class, 'user_1')->union($this->conversations_2());
     }
 
-    public function sendMessage(String $conversationId, String $msg, String $signature): void
+    public function sendMessage(String $conversationId, String $msg, String $signature)
     {
-        Message::create([
+        return Message::create([
             'conversation_id' => $conversationId,
             'sender_id' => $this->id,
             'content' => $msg,
             'signature' => $signature,
         ]);
     }
+
+
 }

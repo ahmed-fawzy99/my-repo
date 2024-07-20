@@ -1,7 +1,13 @@
 <script setup>
-import {Head, Link, router} from '@inertiajs/vue3';
+import {Head, router} from '@inertiajs/vue3';
 import {onMounted, ref, useAttrs, watch} from "vue";
-import {decryptConversation, deleteMessage, sendMessage, validatePrivateKey} from "@/js-helpers/chat-helpers.js";
+import {
+    decryptConversation,
+    decryptMessage,
+    deleteMessage,
+    sendMessage,
+    validatePrivateKey
+} from "@/js-helpers/chat-helpers.js";
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import ConversationTabs from "@/Components/Tabs/ConversationTabs.vue";
 import ChatBubble from "@/Components/ChatBubble.vue";
@@ -25,12 +31,17 @@ const messageInput = ref('');
 const contactSearch = ref('');
 const conversationMessagesCount = ref(0);
 const isValidKey = ref(false);
+const audio = new Audio('storage/sounds/incoming-msg.mp3');
 
 const getActiveConversation = () => {
     return activeConversationId ? props.conversations.data.filter(convo => convo.id === activeConversationId.value)[0] : null;
 }
 const setActiveConversation = (conversationId) => {
     activeConversationId.value = conversationId;
+}
+
+const getConversationById = (conversationId) => {
+    return props.conversations.data.filter(convo => convo.id === conversationId)[0];
 }
 const getSenderName = (message) => {
     const conversation = getActiveConversation();
@@ -68,6 +79,7 @@ const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, re
         return;
     }
     await sendMessage(message, conversationId, senderPrvMnemonic, receiverPubKey);
+    sortMsgs(getActiveConversation().messages);
     await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
     messageInput.value = '';
     const chatContent = document.getElementById('chat-content');
@@ -103,7 +115,7 @@ const sortMsgs = (msgs) => {
 }
 
 onMounted(() => {
-    if (countConversationMessages()){
+    if (countConversationMessages()) {
         sortMsgs(getActiveConversation().messages);
         decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
     }
@@ -123,20 +135,45 @@ const search = debounce(() => {
 }, 250);
 watch(contactSearch, search);
 
-watch(activeConversationId, async ( newVal, oldVal) => {
+watch(activeConversationId, async (newVal, oldVal) => {
     if (newVal !== oldVal) {
         if (countConversationMessages()){
-            await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
-    }
+            router.patch(route('conversations.update', {id: newVal}),  {id: newVal}, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: async () => {
+                    await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+                }
+            });
+        }
 }});
 watch(secretKey, async () => {
-    if (secretKey.value.split(' ').length - 1 >= 11){ // for performance, only validate if the key is 12 words
+    if (secretKey.value.split(' ').length - 1 >= 11) { // for performance, only validate if the key is 12 words
         isValidKey.value = await validatePrivateKey(secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
     }
-    if (countConversationMessages()){
+    if (countConversationMessages()) {
         await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
     }
 });
+
+Echo.private(`messages.${attrs.auth.user.id}`)
+    .listen('MessageSent', async (e) => {
+        if (e.message.conversation.id === activeConversationId.value) {
+            try {
+                await decryptMessage(e.message, secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
+            } catch (e) {
+                throw e;
+            } finally {
+                getActiveConversation().messages.push(e.message);
+                countConversationMessages();
+                audio.play();
+            }
+        } else {
+            getConversationById(e.message.conversation.id).messages.push(e.message);
+        }
+    });
+
+
 </script>
 
 <template>
@@ -149,23 +186,24 @@ watch(secretKey, async () => {
             <div
                 class="w-full h-12 overflow-hidden text-white  bg-primary-700 dark:bg-primary-950 text-sm p-1 flex items-center justify-between px-4 gap-4">
                 <span class="w-1/3">Paste Your Private Secret Word: <ToolTip>This key will be used to encrypt your outgoing messages <br> and decrypt your conversations.</ToolTip></span>
-                <TextInput v-model="secretKey" type="password" autocomplete="off" class="w-full !p-1.5" id="secret-key"
+                <TextInput v-model="secretKey" type="text" autocomplete="off" class="w-full !p-1.5" id="secret-key"
                            :class="{ '!border-green-500 ': isValidKey, '!border-red-500': secretKey && !isValidKey }"
                            :disabled="getActiveConversation() === null"
                            placeholder="Enter your secret word"/>
                 <span @click="toggleSecretKey"
-                      class="pi pi-eye cursor-pointer" />
+                      class="pi pi-eye cursor-pointer"/>
             </div>
 
             <div class="h-[calc(100vh-7rem)] w-full grid grid-cols-12 dark:bg-base-950">
 
                 <!-- Conversation Selector -->
-                <div  class="col-span-3 bg-base-200 dark:bg-base-800 shadow-sm border-r border-base-200 dark:border-base-900">
+                <div
+                    class="col-span-3 bg-base-200 dark:bg-base-800 shadow-sm border-r border-base-200 dark:border-base-900">
                     <div class="px-4 py-2">
                         <label for="conversation-search" class="sr-only">Search</label>
                         <div class="relative w-full">
                             <span></span>
-                            <input type="text" id="conversation-search"  v-model="contactSearch"
+                            <input type="text" id="conversation-search" v-model="contactSearch"
                                    class="bg-base-50 border border-base-300 text-base-900 text-sm rounded-lg
                         focus:ring-primary-500 focus:border-primary-500 block w-full
                         dark:bg-base-700 dark:border-base-600 dark:placeholder-base-400 dark:text-white
@@ -207,20 +245,24 @@ watch(secretKey, async () => {
 
                 <!-- Chat Screen -->
                 <div class="col-span-9 overflow-y-scroll " id="chat-content">
-                    <div class="sticky h-12 top-0 w-full p-3 bg-base-200 dark:bg-base-900 flex justify-between items-center">
+                    <div
+                        class="sticky h-12 top-0 w-full p-3 bg-base-200 dark:bg-base-900 flex justify-between items-center">
                         <div class="flex items-center">
                             <span class="pi pi-user text-lg text-black rounded-full p-1 shadow-sm bg-white mr-2"/>
                             <p class="text-sm">{{ conversations.total ? getOtherParty()?.name : null }}</p>
                         </div>
-                        <span class="pi pi-trash me-4"/>
+
+                            <!-- to be implemented later.. -->
+                            <!-- <span class="pi pi-trash me-4"/>-->
                     </div>
                     <div v-if="conversationMessagesCount && activeConversationId" class="p-4  min-h-[calc(100%-7rem)]">
                         <ChatBubble
                             :id="Math.random().toString(36).slice(2, 5)"
                             v-for="message in getActiveConversation().messages"
+                            :key="message.id"
                             class="mb-4"
                             :isSender="message.sender_id === $attrs.auth.user.id"
-                            :msg.sync="{
+                            :msg="{
                                 id: message.id,
                                 sender_id: message.sender_id,
                                 auth_id: $attrs.auth.user.id,
@@ -229,7 +271,8 @@ watch(secretKey, async () => {
                                 encrypted: message.encrypted,
                                 invalid: message.invalid,
                                 time: message.created_at,
-                                read: message.is_read
+                                read: message.is_read,
+                                processing: getActiveConversation().processing
                             }"
                             @deleteMessage="deleteMsg"
                         >
@@ -249,8 +292,8 @@ watch(secretKey, async () => {
                                     dark:placeholder-base-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                    placeholder="Your message..."/>
                             <button type="button" href="#"
-                                  @click="send(messageInput, activeConversationId, secretKey, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa])"
-                                  class="inline-flex justify-center p-2 text-primary-600 rounded-full
+                                    @click="send(messageInput, activeConversationId, secretKey, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa])"
+                                    class="inline-flex justify-center p-2 text-primary-600 rounded-full
                                 cursor-pointer hover:bg-primary-100 dark:text-primary-500 dark:hover:bg-base-600">
 
                                 <span class="pi pi-send text-xl "/>

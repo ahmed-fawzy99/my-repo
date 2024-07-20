@@ -47,9 +47,9 @@ class Conversation extends Model
     {
         return $this->belongsTo(User::class, 'user_2', 'id');
     }
-    public function users(): \Illuminate\Database\Eloquent\Collection
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->user_1()->get()->union($this->user_2()->get()) ;
+        return $this->belongsTo(User::class, 'user_1', 'id')->union($this->user_2());
     }
 
     public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany

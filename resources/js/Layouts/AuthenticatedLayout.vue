@@ -1,14 +1,20 @@
 <script setup>
-import {ref} from 'vue';
+import {reactive, ref} from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import {Link} from '@inertiajs/vue3';
+import {Link, usePage} from '@inertiajs/vue3';
 import 'primeicons/primeicons.css'
 import {useDark, useToggle} from "@vueuse/core";
+import ChatNotificationBell from "@/Components/NotificationBell.vue";
+import ToastNotification from "@/Components/ToastNotification.vue";
+import {Toast} from "@/js-helpers/generic-helpers.js";
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
+const page = usePage()
+const audio = new Audio('storage/sounds/incoming-notification.mp3');
+const notification = ref({});
 
 const showingNavigationDropdown = ref(false);
 const usageWarningStatus = ref(localStorage.getItem('usageWarning'));
@@ -16,6 +22,31 @@ const setUsageWarning = () => {
     usageWarningStatus.value = 'seen';
     localStorage.setItem('usageWarning', 'seen')
 };
+
+
+Echo.private('App.Models.User.' + page.props.auth.user.id)
+    .notification((n) => {
+        notification.value = n;
+
+        page.props.auth.notifications.unshift({data:n});
+        page.props.auth.notifications.splice(-1, 1);
+
+        if (route().current('conversations.index')){
+            return;
+        }
+
+        audio.play();
+        const toast = document.getElementById('toast-notification');
+        // We need a better toaster
+        if (toast.classList.contains('hidden')){
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                notification.value = {};
+            }, 3000);
+        }
+
+    });
 
 defineProps({
     freeContent: {
@@ -28,7 +59,8 @@ defineProps({
 
 <template>
     <div class="flex flex-row">
-        <aside class="fixed top-0 z-40 items-center w-16 h-screen overflow-hidden text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
+        <aside
+            class="fixed top-0 z-40 items-center w-16 h-screen overflow-hidden text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
             <div class="flex flex-col justify-between h-full">
                 <div class="flex flex-col h-full">
                     <Link class="flex items-center justify-center pt-3 pb-2" :href="route('dashboard')">
@@ -72,9 +104,11 @@ defineProps({
             </div>
         </aside>
         <Transition>
-            <div v-if="!usageWarningStatus" class="fixed z-50 w-full h-8 bottom-0 text-center ml-16 bg-amber-300 dark:bg-amber-500  ">
+            <div v-if="!usageWarningStatus"
+                 class="fixed z-50 w-full h-8 bottom-0 text-center ml-16 bg-amber-300 dark:bg-amber-500  ">
                 <p class="h-full content-center text-base-900">
-                    <span class="pi pi-exclamation-triangle" /> This is a demo site, uploads have been limited to 3 files and 1 MB max. each.
+                    <span class="pi pi-exclamation-triangle"/> This is a demo site, uploads have been limited to 3 files
+                    and 1 MB max. each.
                     <span class="pi pi-times text-xs cursor-pointer" @click="setUsageWarning()"></span>
                 </p>
             </div>
@@ -95,11 +129,16 @@ defineProps({
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
 
                             <!-- Dark mode Switcher & Settings Dropdown -->
+
+                            <!-- Dropdown menu -->
+                            <ChatNotificationBell/>
+
+
                             <button
                                 @click="toggleDark()"
                                 class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700
                                     focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700
-                                    rounded-lg text-sm p-2.5 transition-colors duration-200"
+                                    rounded-lg text-sm p-2.5 transition-colors duration-200 ml-2"
                             >
                                 <svg
                                     id="theme-toggle-dark-icon"
@@ -241,8 +280,9 @@ defineProps({
 
             <!-- Page Content -->
             <main>
-                <slot name="free-content" />
+                <slot name="free-content"/>
                 <div v-if="!freeContent" class="py-8">
+                    <ToastNotification v-model="notification"/>
                     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                         <slot/>
                     </div>

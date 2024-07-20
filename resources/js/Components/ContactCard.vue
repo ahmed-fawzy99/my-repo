@@ -47,7 +47,7 @@ onMounted(() => {
             </div>
         </div>
         <div class="flex flex-col items-center pb-10">
-            <div class="flex w-24 h-24 mb-3 rounded-full shadow-lg justify-center items-center text-4xl">
+            <div class="flex w-24 h-24 mb-3 rounded-full shadow-lg justify-center items-center text-4xl bg-orange-500">
                 <span class="pi pi-user"/>
             </div>
 

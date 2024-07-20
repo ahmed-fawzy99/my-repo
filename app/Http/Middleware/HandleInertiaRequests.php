@@ -33,7 +33,8 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => auth()->user()?->only('id', 'name', 'email', 'email_verified_at', 'public_key_ecdh', 'public_key_eddsa'),
-            ],
+                'notifications' => auth()->user()?->notifications()->limit(5)->get(),
+                ],
         ];
     }
 }

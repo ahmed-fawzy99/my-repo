@@ -37,9 +37,6 @@ class ConversationController extends Controller
             $conversation = null;
         }
 
-
-
-
         return inertia('Conversation/Conversations', [
             'conversations' => auth()->user()->conversations()
                 ->with('user_1', 'user_2', 'messages')
@@ -93,9 +90,17 @@ class ConversationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Conversation $conversation)
+    public function update(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'id' => 'required|ulid',
+        ]);
+
+        Conversation::find($request->id)->messages()->update([
+            'is_read' => true,
+        ]);
+
+        return redirect()->route('conversations.index');
     }
 
     /**

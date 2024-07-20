@@ -64,7 +64,7 @@ const trackSelectedContacts = (event, id, name) => {
                                 <div class="flex items-center ps-2 rounded hover:bg-base-100 dark:hover:bg-base-600">
                                     <input :id="'checkbox-'+user.id" type="checkbox" :checked="selectedContacts.some(item => item.id === user.id)" :value="user.id" @change="trackSelectedContacts($event, user.id, user.name)"
                                            class="w-4 h-4 text-primary-600 bg-base-100 border-base-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-base-700 dark:focus:ring-offset-base-700 focus:ring-2 dark:bg-base-600 dark:border-base-500">
-                                    <span class="pi pi-user ml-4"/>
+                                    <span class="pi pi-user ml-4 "/>
                                     <label :for="'checkbox-'+user.id" class="w-full py-2 ms-2 text-sm font-medium text-base-900 rounded dark:text-base-300">{{ user.name }}</label>
                                 </div>
                             </a>

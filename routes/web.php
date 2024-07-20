@@ -22,10 +22,17 @@ Route::get('/team', function () {
 Route::get('/get-file', [FileController::class, 'get'])->name('get-file');
 
 // Dashboard
-Route::group(['middleware' => ['auth', 'verified']], function () {
+Route::group(['middleware' => ['auth', 'verified', 'HasKeys']], function () {
+
+    //Profile
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     // Dashboard
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('key-vault', [DashboardController::class, 'vault'])->name('key-vault');
+    Route::get('account-data', [ProfileController::class, 'show'])->name('account-data');
 
     // Files
     Route::post('store-file', [FileController::class, 'store'])->name('store-file');
@@ -43,14 +50,10 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
 
     // Messages
     Route::resource('messages', MessageController::class);
-
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('account-data', [ProfileController::class, 'show'])->name('account-data');
+
     Route::get('register-keys', [ProfileController::class, 'getKeys'])->name('register-keys');
     Route::get('finalize', [ProfileController::class, 'finalize'])->name('finalize-reg');
 });
