@@ -18,33 +18,37 @@ class ConversationController extends Controller
         ]);
 
         // If the request contains a contactId, for redirection purpose
-        if (array_key_exists('contactId', $validated)){
-            $conversation = Conversation::where(function($query) use ($validated) {
+        if (array_key_exists('contactId', $validated)) {
+            $conversation = Conversation::where(function ($query) use ($validated) {
                 $query->where('user_1', auth()->id())
                     ->where('user_2', $validated['contactId']);
-            })->orWhere(function($query) use ($validated) {
+            })->orWhere(function ($query) use ($validated) {
                 $query->where('user_1', $validated['contactId'])
                     ->where('user_2', auth()->id());
             })->first();
 
-            if (!$conversation) {
+            // If the conversation does not exist, check if the contact is in the user's contacts
+            if (!$conversation && auth()->user()->contacts()->where('contact_id', $validated['contactId'])->exists()) {
+                // then create a new conversation
                 $conversation = Conversation::create([
                     'user_1' => auth()->id(),
                     'user_2' => $validated['contactId'],
                 ]);
+            } else {
+                $conversation = null;
             }
         } else {
             $conversation = null;
         }
 
         return inertia('Conversation/Conversations', [
-            'conversations' => auth()->user()->conversations()
+            'conversations_enc' => auth()->user()->conversations()
                 ->with('user_1', 'user_2', 'messages')
-                ->when($request->contactSearch, function($query, $contactSearch) {
-                    $query->where(function($query) use ($contactSearch) {
-                        $query->whereHas('user_1', function($query) use ($contactSearch) {
+                ->when($request->contactSearch, function ($query, $contactSearch) {
+                    $query->where(function ($query) use ($contactSearch) {
+                        $query->whereHas('user_1', function ($query) use ($contactSearch) {
                             $query->where('name', 'ILIKE', '%' . $contactSearch . '%');
-                        })->orWhereHas('user_2', function($query) use ($contactSearch) {
+                        })->orWhereHas('user_2', function ($query) use ($contactSearch) {
                             $query->where('name', 'ILIKE', '%' . $contactSearch . '%');
                         });
                     });
@@ -58,7 +62,8 @@ class ConversationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public
+    function create()
     {
         //
     }
@@ -66,7 +71,8 @@ class ConversationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public
+    function store(Request $request)
     {
         //
     }
@@ -74,7 +80,8 @@ class ConversationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Conversation $conversation)
+    public
+    function show(Conversation $conversation)
     {
         //
     }
@@ -82,7 +89,8 @@ class ConversationController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Conversation $conversation)
+    public
+    function edit(Conversation $conversation)
     {
         //
     }
@@ -90,7 +98,8 @@ class ConversationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public
+    function update(Request $request)
     {
         $validated = $request->validate([
             'id' => 'required|ulid',
@@ -106,7 +115,8 @@ class ConversationController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Conversation $conversation)
+    public
+    function destroy(Conversation $conversation)
     {
         //
     }

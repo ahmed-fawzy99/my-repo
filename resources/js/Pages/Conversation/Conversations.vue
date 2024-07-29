@@ -17,15 +17,17 @@ import {toaster} from "@/js-helpers/generic-helpers.js";
 import debounce from "lodash/debounce.js";
 
 const props = defineProps({
-    conversations: Object,
+    conversations_enc: Object,
     passedConversationId: {
         type: String,
         default: null
     },
 });
+const conversations = {...props.conversations_enc};
+
 
 const attrs = useAttrs()
-const activeConversationId = ref(props.passedConversationId ?? (props.conversations.data[0]?.id ?? null));
+const activeConversationId = ref(props.passedConversationId ?? (conversations.data[0]?.id ?? null));
 const secretKey = ref('');
 const messageInput = ref('');
 const contactSearch = ref('');
@@ -34,14 +36,17 @@ const isValidKey = ref(false);
 const audio = new Audio('storage/sounds/incoming-msg.mp3');
 
 const getActiveConversation = () => {
-    return activeConversationId ? props.conversations.data.filter(convo => convo.id === activeConversationId.value)[0] : null;
+    return activeConversationId ? conversations.data.filter(convo => convo.id === activeConversationId.value)[0] : null;
+}
+const getActiveConversationEnc = () => {
+    return activeConversationId ? props.conversations_enc.data.filter(convo => convo.id === activeConversationId.value)[0] : null;
 }
 const setActiveConversation = (conversationId) => {
     activeConversationId.value = conversationId;
 }
 
 const getConversationById = (conversationId) => {
-    return props.conversations.data.filter(convo => convo.id === conversationId)[0];
+    return conversations.data.filter(convo => convo.id === conversationId)[0];
 }
 const getSenderName = (message) => {
     const conversation = getActiveConversation();
@@ -79,8 +84,12 @@ const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, re
         return;
     }
     await sendMessage(message, conversationId, senderPrvMnemonic, receiverPubKey);
-    sortMsgs(getActiveConversation().messages);
-    await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+
+    const messages =getActiveConversation().messages;
+    messages.push(getActiveConversationEnc().messages[getActiveConversationEnc().messages.length - 1]);
+    messages[getActiveConversation().messages.length - 1].content = message;
+
+
     messageInput.value = '';
     const chatContent = document.getElementById('chat-content');
     if (conversationMessagesCount.value) {
@@ -142,7 +151,11 @@ watch(activeConversationId, async (newVal, oldVal) => {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: async () => {
-                    await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+                    try {
+                        await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+                    } catch (e) {
+                        throw e;
+                    }
                 }
             });
         }
@@ -151,16 +164,18 @@ watch(secretKey, async () => {
     if (secretKey.value.split(' ').length - 1 >= 11) { // for performance, only validate if the key is 12 words
         isValidKey.value = await validatePrivateKey(secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
     }
-    if (countConversationMessages()) {
-        await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
+    if (countConversationMessages() && isValidKey.value) {
+        await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
     }
+
 });
 
 Echo.private(`messages.${attrs.auth.user.id}`)
     .listen('MessageSent', async (e) => {
         if (e.message.conversation.id === activeConversationId.value) {
             try {
-                await decryptMessage(e.message, secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
+                console.log(e.message)
+                await decryptMessage(e.message, secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], false, 'auth.user');
             } catch (e) {
                 throw e;
             } finally {

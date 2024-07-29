@@ -74,89 +74,101 @@ export async function sendMessage(content, conversationId, senderPrvMnemonic, re
     });
 }
 
-export async function decryptMessage(message, prvMnemonic, targetPubKeys, srcPubKeys = null) {
+function decMsg(content, sharedKey) {
+    return CryptoJS.AES.decrypt(content, sharedKey);
+}
+
+export function validateMsg(content, signature, targetEddsaPubKey) {
+    const senderPubKey = eddsa_ed25519.keyFromPublic(targetEddsaPubKey, 'hex')
+    return senderPubKey.verify(content, signature);
+}
+
+export async function decryptMessage(message, prvMnemonic, targetPubKeys, srcPubKeys = null, keyValidation = false, realtime= false, authPubKeys = null) {
     return new Promise(async (resolve, reject) => {
-        const isValidKey = await validatePrivateKey(prvMnemonic, srcPubKeys);
-        if (!isValidKey) {
-            message.encrypted = true;
-            reject('Empty/Incorrect Secret Key... Decrypting failed');
-            return;
-        }
-        const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, targetPubKeys[0]);
-        const decryptedMessage = CryptoJS.AES.decrypt(message.content, sharedKey).toString(CryptoJS.enc.Utf8);
         try {
-            const {content, signature} = JSON.parse(decryptedMessage);
-            const senderPubKey = eddsa_ed25519.keyFromPublic(targetPubKeys[1], 'hex')
-            const isValid = senderPubKey.verify(content, signature);
+            if (!keyValidation) {
+                const isValidKey = await validatePrivateKey(prvMnemonic, realtime ? targetPubKeys : srcPubKeys);
+                if (!isValidKey) {
+                    message.encrypted = true;
+                    reject('Empty/Incorrect Secret Key... Decrypting failed');
+                    return;
+                }
+            }
+            const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, realtime ? srcPubKeys[0] : (authPubKeys[0] === targetPubKeys[0] ? targetPubKeys[0] : srcPubKeys[0]));
+            const decryptedMessage = decMsg(message.content, sharedKey).toString(CryptoJS.enc.Latin1);
+            const { content, signature } = JSON.parse(decryptedMessage);
+            const isValid = validateMsg(content, signature, srcPubKeys[1]);
             if (!isValid) {
-                toaster('error', 'Message is not valid');
                 message.invalid = true;
+                console.log(content)
+                toaster('error', 'Message is not valid');
                 reject('Message is not valid');
+                return;
             }
             message.content = content;
             resolve(content);
         } catch (e) {
-            console.log(decryptedMessage)
-            console.log(e)
+            reject(e);
         }
-
     });
-
-
 }
 
+
 // targetPubKey is an array of two public keys [ECDH, EdDSA]
-export async function decryptConversation(conversation, prvMnemonic, targetPubKeys, srcPubKeys = null) {
-    conversation.processing = true;
-    try {
-        const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, targetPubKeys[0]);
+export async function decryptConversation(conversation, prvMnemonic, authPubKeys = null) {
+    return new Promise(async (resolve, reject) => {
+        conversation.processing = true;
         let isValidKey = false;
-        if (srcPubKeys) {
-            isValidKey = await validatePrivateKey(prvMnemonic, srcPubKeys);
+
+        if (!prvMnemonic){
+            conversation.processing = false;
+            conversation.messages.forEach(message => message.encrypted = true);
+            reject('Empty Secret Key... Conversation Decrypting Halted');
+            return
+        }
+
+        if (authPubKeys) {
+            isValidKey = await validatePrivateKey(prvMnemonic, authPubKeys);
         }
         for (const message of conversation.messages) {
+            // Skeletons
+            conversation.processing = true;
+            message.encrypted = true;
+
+            // Validation
             if (message.content === '') {
                 conversation.processing = false;
                 continue
             }
-            message.encrypted = true;
-            message.invalid = false;
-
             if (!message.content.startsWith('U2FsdGVkX1') && isValidKey) {
                 message.encrypted = false;
                 conversation.processing = false;
                 continue;
             }
+
+            // Decryption
             try {
-                const decryptedMessage = CryptoJS.AES.decrypt(message.content, sharedKey).toString(CryptoJS.enc.Utf8);
-
-                const {content, signature} = JSON.parse(decryptedMessage);
-
-                const senderPubKeyStr = conversation.user_1.id === message.sender_id ?
-                    conversation.user_1.public_key_eddsa : conversation.user_2.public_key_eddsa;
-
-                const senderPubKey = eddsa_ed25519.keyFromPublic(senderPubKeyStr, 'hex')
-                const isValid = senderPubKey.verify(content, signature);
-
-                message.content = content;
-
-                if (!isValid) {
-                    toaster('error', 'Message is not valid');
-                    message.invalid = true;
-                    conversation.processing = false;
-                    return false;
+                let senderKeys = null;
+                let receiverKeys = null;
+                if (message.sender_id === conversation.user_1.id) {
+                    senderKeys = [conversation.user_1.public_key_ecdh, conversation.user_1.public_key_eddsa];
+                    receiverKeys = [conversation.user_2.public_key_ecdh, conversation.user_2.public_key_eddsa];
+                } else {
+                    senderKeys = [conversation.user_2.public_key_ecdh, conversation.user_2.public_key_eddsa];
+                    receiverKeys = [conversation.user_1.public_key_ecdh, conversation.user_1.public_key_eddsa];
                 }
-                message.content = content;
+                await decryptMessage(message, prvMnemonic, receiverKeys, senderKeys, true, false, authPubKeys);
                 message.encrypted = false;
-                conversation.processing = false;
+                message.invalid = true;
+                resolve();
             } catch (e) {
+                reject(e);
+            }
+            finally {
                 conversation.processing = false;
             }
         }
-    } catch (e) {
-        conversation.processing = false;
-        console.log(e)
-    }
+    });
 
 }
 

@@ -69,10 +69,10 @@ class ContactController extends Controller
             foreach ($validated['selectedContacts'] as $contactId) {
                 $contact = User::find($contactId);
                 auth()->user()->contacts()->attach($contact);
-                Conversation::create([
-                    'user_1' => auth()->id(),
-                    'user_2' => $contactId,
-                ]);
+//                Conversation::create([
+//                    'user_1' => auth()->id(),
+//                    'user_2' => $contactId,
+//                ]);
             }
             return redirect()->route('contacts.index');
         } catch (\Exception $e) {
@@ -114,6 +114,10 @@ class ContactController extends Controller
                 'contact_id' => $id,
                 'contact_accepted' => true,
             ]);
+                Conversation::create([
+                    'user_1' => auth()->id(),
+                    'user_2' => $id,
+                ]);
 
         } else {
             Contact::where('contact_id', auth()->id())->where('user_id', $id)->delete();
@@ -137,11 +141,13 @@ class ContactController extends Controller
             $query->where('user_1', $id)
                 ->where('user_2', auth()->id());
         })->delete();
+        // auth()->user()->conversations()->where('user_1', '')->orWhere('user_2', '')->delete()
 
 
         // Delete Contact
         auth()->user()->contacts()->detach($contact);
         $contact->contacts()->detach(auth()->user());
+
         return redirect()->route('contacts.index');
     }
 

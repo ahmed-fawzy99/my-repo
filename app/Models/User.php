@@ -14,7 +14,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
-class User extends Authenticatable implements HasMedia
+class User extends Authenticatable implements HasMedia, MustVerifyEmail
 {
     use HasFactory, Notifiable, InteractsWithMedia, HasUlids;
 
