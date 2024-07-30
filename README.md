@@ -189,7 +189,7 @@ If you find any issues or would like to suggest an improvement for this project,
 # Help us Grow
 Our project is open-source, and we are always looking for contributors to help us grow and improve our project. If you are interested in contributing, please feel free to fork the project and submit a pull request.
 
-Also, we want to buy a more performant server to host our project, so help spread the word and support more users. If you would like to support us, please consider buying us a coffee.
+Also, we want to buy a more performant server to host our project to spread the word and serve more users with fewer limitations. If you would like to support us, please consider [buying us a coffee ☕](https://www.buymeacoffee.com/ahmeddeghady) :).
 
 Finally, if you like our project, please give us a star to show your support.
 
