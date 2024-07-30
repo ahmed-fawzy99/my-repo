@@ -8,6 +8,7 @@ import {ref, watch} from "vue";
 import debounce from "lodash/debounce.js";
 import ContactFind from "@/Components/ContactFind.vue";
 import {sendContactRequest} from "@/js-helpers/contacts-helper.js";
+import {sendFile} from "@/js-helpers/crypto-helpers.js";
 
 const props = defineProps({
     contacts: Object,
@@ -47,7 +48,7 @@ const trackSelectedContacts = (event, id, name) => {
         </template>
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-4xl mb-4">My Contacts</h1>
-            <div class="flex inline-flex gap-4">
+            <div class="flex gap-4">
                 <ContactFind
                     v-model="selectedContacts"
                     :id="Math.random().toString(36).slice(2, 5)"
@@ -84,7 +85,7 @@ const trackSelectedContacts = (event, id, name) => {
         <Card>
             <div v-if="contacts.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto">
                 <ContactCard v-for="contact in contacts" :key="contact.id"
-                    :id="Math.random().toString(36).slice(2, 5)" @openConversation="openConversation"
+                    :id="Math.random().toString(36).slice(2, 5)" @openConversation="openConversation" @sendFile="sendFile"
                     :name="contact.name" :email="contact.email" :contactId="contact.id"
                 />
             </div>

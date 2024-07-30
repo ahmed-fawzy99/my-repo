@@ -5,7 +5,14 @@ import {Head, router, useForm} from '@inertiajs/vue3';
 import debounce from "lodash/debounce";
 
 import {formatFileSize} from "@/js-helpers/generic-helpers.js";
-import {downloadDecrypted, generateKey, removeFile, renameFile, uploadDecrypted,} from "@/js-helpers/crypto-helpers.js";
+import {
+    downloadDecrypted,
+    generateKey,
+    removeFile,
+    renameFile,
+    share,
+    uploadDecrypted,
+} from "@/js-helpers/crypto-helpers.js";
 
 import Card from "@/Components/Card.vue";
 import Table from "@/Components/Table/Table.vue";
@@ -43,13 +50,20 @@ const reset = () => {
     encryptionKey.value = '';
     document.getElementById('file-input').value = '';
 }
+
+const shareHandler = (uuid, encStatus) => {
+    if (encStatus) {
+        return false;
+    }
+    share(uuid);
+}
+
 const search = debounce(() => {
     router.visit(route('dashboard', {sort: sort.value, sort_dir: sort_dir.value}),
         {preserveState: true, preserveScroll: true})
 }, 100);
 watch(sort, search);
 watch(sort_dir, search);
-
 
 onMounted(() => {
     document.getElementById('file-input').addEventListener('change', (e) => {
@@ -68,11 +82,10 @@ onMounted(() => {
         </template>
         <h1 class="text-4xl mb-4">Dashboard</h1>
         <div class="flex flex-row gap-4 h-fit">
-            <Card class="w-3/4 overflow-visible">
+            <Card class="w-full">
                 <h2 class="text-xl">
                     Add File
                 </h2>
-
                 <form @submit.prevent="upload" class="pt-4">
                     <FileInput no-label v-model="fileForm.file"/>
                     <Toggle class="mt-4" v-model="usePrivateKey"
@@ -81,8 +94,9 @@ onMounted(() => {
                         <InputLabel for="enc-choice" value="Specific Encryption Key" class="inline"/>
                         <span class="pi pi-refresh ml-2 cursor-pointer text-xs" title="Generate Random Key"
                               @click="encryptionKey = generateKey(16)"/>
-                        <ToolTip direction="right">This is the key that will be used to decrypt the file. Don't lose
-                            it!
+                        <ToolTip direction="right">This is the key that will be used to decrypt the file.
+                            If you are going to share this file, this is the key you will share with the recipient(s).
+                            Don't lose it!
                         </ToolTip>
                         <TextInput
                             id="enc-choice"
@@ -163,12 +177,14 @@ onMounted(() => {
                                    href="#" title="Download">
                                     <span class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
-                                <a @click="downloadDecrypted(file.uuid, file.file_name, file.custom_properties.enc_key, file.custom_properties.checksum)"
-                                   href="#" title="Share">
-                                    <span class="pi pi-share-alt text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                <a @click="shareHandler(file.uuid, file.custom_properties.enc_key)">
+                                    <span
+                                        :class="{'text-base-500/30 cursor-not-allowed dark:text-base-100/20' : file.custom_properties.enc_key,
+                                                 'text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 transition ease-in-out duration-150': !file.custom_properties.enc_key}"
+                                        class="pi pi-share-alt rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="renameFile(file.uuid, file.file_name)" href="#" title="Rename File">
-                                    <span class="pi pi-pen-to-square text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                    <span class="pi pi-pen-to-square rounded-lg p-2"/>
                                 </a>
                                 <a @click="removeFile(file.uuid)" href="#" title="Remove File">
                                     <span class="pi pi-trash text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>

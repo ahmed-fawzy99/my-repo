@@ -28,18 +28,23 @@ class ConversationController extends Controller
             })->first();
 
             // If the conversation does not exist, check if the contact is in the user's contacts
-            if (!$conversation && auth()->user()->contacts()->where('contact_id', $validated['contactId'])->exists()) {
-                // then create a new conversation
-                $conversation = Conversation::create([
-                    'user_1' => auth()->id(),
-                    'user_2' => $validated['contactId'],
-                ]);
-            } else {
-                $conversation = null;
+            if (!$conversation) {
+                // Make sure they are contacts
+                if (auth()->user()->contacts()->where('contact_id', $validated['contactId'])->exists()){
+                    // then create a new conversation
+                    $conversation = Conversation::create([
+                        'user_1' => auth()->id(),
+                        'user_2' => $validated['contactId'],
+                    ]);
+                }
+                else {
+                    $conversation = null;
+                }
             }
         } else {
             $conversation = null;
         }
+
 
         return inertia('Conversation/Conversations', [
             'conversations_enc' => auth()->user()->conversations()

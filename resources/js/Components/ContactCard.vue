@@ -3,6 +3,7 @@ import {Link} from '@inertiajs/vue3';
 import {initDropdowns} from "flowbite";
 import {onMounted} from "vue";
 import {removeContact} from "@/js-helpers/contacts-helper.js";
+import {sendFile} from "@/js-helpers/crypto-helpers.js";
 
 defineProps({
     id: {
@@ -58,10 +59,10 @@ onMounted(() => {
                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-center text-white bg-primary-700 rounded-lg hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
                     <span class="pi pi-send mr-2"/>Message
                 </Link>
-                <Link href="#"
-                      class="py-2 px-4 ms-2 text-sm font-medium text-base-900 focus:outline-none bg-white rounded-lg border border-base-200 hover:bg-base-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-base-100 dark:focus:ring-base-700 dark:bg-base-800 dark:text-base-400 dark:border-base-600 dark:hover:text-white dark:hover:bg-base-700">
-                    Send File
-                </Link>
+<!--                <Link href="#" @click="$emit('sendFile', contactId)"-->
+<!--                      class="py-2 px-4 ms-2 text-sm font-medium text-base-900 focus:outline-none bg-white rounded-lg border border-base-200 hover:bg-base-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-base-100 dark:focus:ring-base-700 dark:bg-base-800 dark:text-base-400 dark:border-base-600 dark:hover:text-white dark:hover:bg-base-700">-->
+<!--                    Send File-->
+<!--                </Link>-->
             </div>
         </div>
     </div>

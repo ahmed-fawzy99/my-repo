@@ -19,7 +19,8 @@ Route::get('/team', function () {
 })->name('team');
 
 // Sharing
-Route::get('/get-file', [FileController::class, 'get'])->name('get-file');
+Route::get('get-shared-file/{file_uuid}', [FileController::class, 'getShared'])->name('get-shared-file');
+Route::get('download-shared', [FileController::class, 'downloadShared'])->name('download-shared');
 
 // Dashboard
 Route::group(['middleware' => ['auth', 'verified', 'HasKeys']], function () {
@@ -35,9 +36,12 @@ Route::group(['middleware' => ['auth', 'verified', 'HasKeys']], function () {
     Route::get('account-data', [ProfileController::class, 'show'])->name('account-data');
 
     // Files
+    Route::get('get-file', [FileController::class, 'get'])->name('get-file');
+    Route::get('share-file', [FileController::class, 'share'])->name('share-file');
     Route::post('store-file', [FileController::class, 'store'])->name('store-file');
     Route::patch('rename-file', [FileController::class, 'modify'])->name('rename-file');
     Route::delete('delete-file', [FileController::class, 'destroy'])->name('delete-file');
+
 
     // Contact
     Route::get('contacts/requests', [ContactController::class, 'requestsIndex'])->name('contacts-requests');

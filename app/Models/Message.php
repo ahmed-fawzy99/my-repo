@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\MessageDeleted;
 use App\Events\MessageSent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,8 @@ class Message extends Model
 
     protected $dispatchesEvents = [
         'created' => MessageSent::class,
+        'updated' => MessageDeleted::class, // you only update a message when you delete it, as we only remove the content and the signature
+        'deleted' => MessageDeleted::class, // you only update a message when you delete it, as we only remove the content and the signature
     ];
 
     public function sender(): \Illuminate\Database\Eloquent\Relations\BelongsTo

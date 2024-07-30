@@ -13,6 +13,7 @@ import TableBody from "@/Components/Table/TableBody.vue";
 import CryptoJS from "crypto-js";
 import {ref} from "vue";
 import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
+import {fancyPrompt} from "@/js-helpers/generic-helpers.js";
 
 const props = defineProps({
     files: Object,
@@ -33,8 +34,7 @@ async function toggleKeys() {
         return;
     }
     if (!decrypted.value){
-        const mnemonicSeed = "sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli";
-        // const mnemonicSeed = prompt('Enter your secret');
+        const mnemonicSeed = await fancyPrompt('Enter your mnemonic seed');
         const privateKey = await getPrivateKey(mnemonicSeed);
 
         props.files.data.forEach((file) => {
@@ -73,7 +73,7 @@ async function toggleKeys() {
         <Card class="">
             <Table :links="files.links" :showingNumber="files.data.length" :totalNumber="files.total">
                 <template #Head>
-                    <TableHead sortable>File Name</TableHead>
+                    <TableHead>File Name</TableHead>
                     <TableHead>UUID</TableHead>
                     <TableHead>Key</TableHead>
                 </template>

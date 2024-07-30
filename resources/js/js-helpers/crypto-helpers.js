@@ -5,13 +5,28 @@ import {downloadFile, fancyPrompt, Toast} from "@/js-helpers/generic-helpers.js"
 import Swal from "sweetalert2";
 import {router} from "@inertiajs/vue3";
 
+
+export async function sendFile(contactId){
+
+    // To be implemented later
+
+    // console.log(contactId)
+    // const { value: file } = await Swal.fire({
+    //     title: "Select File",
+    //     input: "file",
+    //
+    // });
+    // if (file) {
+    // }
+}
+
 export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey){
     const reader = new FileReader();
     reader.onload = async (e) => {
 
         let key;
         if (usePrivateKey.value){
-            const mnemonicSeed = "sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli" || await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea", undefined)
+            const mnemonicSeed = await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea", undefined)
             if (!mnemonicSeed)
                 return;
             key = generateKey();
@@ -50,19 +65,21 @@ export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey){
     };
     reader.readAsArrayBuffer(fileForm.file);
 }
-export async function downloadDecrypted(uuid, file_name, enc_key, checksum){
+export async function downloadDecrypted(uuid, file_name, enc_key, checksum, routeName= 'get-file', passedKey = null){
     try {
-        const response = await fetch(route('get-file', {uuid: uuid}));
+        const response = await fetch(route(routeName, {uuid: uuid}));
         const encryptedFile = await response.text();
         let fileKey;
         if (enc_key){
-            const mnemonicSeed = "sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli"
-                // || await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea")
+            const mnemonicSeed = await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea")
             if (!mnemonicSeed)
                 return;
             const privateKey = await getPrivateKey(mnemonicSeed);
             fileKey = CryptoJS.AES.decrypt(enc_key, privateKey).toString(CryptoJS.enc.Latin1);
-        } else {
+        } else if (!enc_key && passedKey && routeName === 'download-shared'){ // if we're downloading a shared file, key is already passed
+            fileKey = passedKey;
+        }
+        else {
             fileKey = await fancyPrompt('Enter the Encryption Key:', 'Ca1i¢0CatsRTheBe$tBa8ie$')
             if (!fileKey)
                 return;
@@ -91,6 +108,38 @@ export async function downloadDecrypted(uuid, file_name, enc_key, checksum){
         });
     }
 }
+
+export async function share(uuid){
+    try {
+        const response = await fetch(route('share-file', {uuid: uuid}));
+        const data = await response.json();
+        Swal.fire({
+            icon: "info",
+            title: "SharableFile Link",
+            html: `
+            Here is the link to share the file: <br><br>
+            <a href="${route().t.url}/get-shared-file/${data.file_uuid}" target="_blank" class="text-primary-600 underline">
+                ${route().t.url}/get-shared-file/${data.file_uuid}
+            </a>`,
+            showCancelButton: true,
+            cancelButtonText: "Close",
+            confirmButtonText: "Copy Link",
+            preConfirm: async (login) => {
+                await navigator.clipboard.writeText(`${route().t.url}/get-shared-file/${data.file_uuid}`);
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Link copied to clipboard!'
+                });
+            }
+            });
+    } catch (e) {
+        Toast.fire({
+            icon: 'error',
+            title: e
+        });
+    }
+}
+
 export async function renameFile(uuid, oldFileName) {
     const { value: newFileName } = await Swal.fire({
         title: `Renaming File ${oldFileName}`,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Listeners\SendDeletionUpdate;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -85,9 +86,10 @@ class MessageController extends Controller
     public function destroy(Message $message)
     {
         if ($message->sender_id === auth()->id()) {
-            $message->content = '';
-            $message->signature = '';
-            $message->save();
+            $message->update([
+                'content' => '',
+                'signature' => '',
+            ]);
             return redirect()->back();
         } else {
             throw new \Exception('Unauthorized');

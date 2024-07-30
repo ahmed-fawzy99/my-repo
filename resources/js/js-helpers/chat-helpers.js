@@ -83,21 +83,21 @@ export function validateMsg(content, signature, targetEddsaPubKey) {
     return senderPubKey.verify(content, signature);
 }
 
-export async function decryptMessage(message, prvMnemonic, targetPubKeys, srcPubKeys = null, keyValidation = false, realtime= false, authPubKeys = null) {
+export async function decryptMessage(message, prvMnemonic, receiverPubKeys, senderPubKeys = null, keyValidation = false, realtime= false, authPubKeys = null) {
     return new Promise(async (resolve, reject) => {
         try {
             if (!keyValidation) {
-                const isValidKey = await validatePrivateKey(prvMnemonic, realtime ? targetPubKeys : srcPubKeys);
+                const isValidKey = await validatePrivateKey(prvMnemonic, realtime ? receiverPubKeys : senderPubKeys);
                 if (!isValidKey) {
                     message.encrypted = true;
                     reject('Empty/Incorrect Secret Key... Decrypting failed');
                     return;
                 }
             }
-            const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, realtime ? srcPubKeys[0] : (authPubKeys[0] === targetPubKeys[0] ? targetPubKeys[0] : srcPubKeys[0]));
-            const decryptedMessage = decMsg(message.content, sharedKey).toString(CryptoJS.enc.Latin1);
+            const sharedKey = await getSharedKeyFromMnemonic(prvMnemonic, realtime ? senderPubKeys[0] : (authPubKeys[0] === receiverPubKeys[0] ? receiverPubKeys[0] : senderPubKeys[0]));
+            const decryptedMessage = decMsg(message.content, sharedKey).toString(CryptoJS.enc.Utf8);
             const { content, signature } = JSON.parse(decryptedMessage);
-            const isValid = validateMsg(content, signature, srcPubKeys[1]);
+            const isValid = validateMsg(content, signature, senderPubKeys[1]);
             if (!isValid) {
                 message.invalid = true;
                 console.log(content)
@@ -148,16 +148,17 @@ export async function decryptConversation(conversation, prvMnemonic, authPubKeys
 
             // Decryption
             try {
-                let senderKeys = null;
-                let receiverKeys = null;
                 if (message.sender_id === conversation.user_1.id) {
-                    senderKeys = [conversation.user_1.public_key_ecdh, conversation.user_1.public_key_eddsa];
-                    receiverKeys = [conversation.user_2.public_key_ecdh, conversation.user_2.public_key_eddsa];
+                    await decryptMessage(message, prvMnemonic,
+                        [conversation.user_2.public_key_ecdh, conversation.user_2.public_key_eddsa],
+                        [conversation.user_1.public_key_ecdh, conversation.user_1.public_key_eddsa],
+                        true, false, authPubKeys);
                 } else {
-                    senderKeys = [conversation.user_2.public_key_ecdh, conversation.user_2.public_key_eddsa];
-                    receiverKeys = [conversation.user_1.public_key_ecdh, conversation.user_1.public_key_eddsa];
+                    await decryptMessage(message, prvMnemonic,
+                        [conversation.user_1.public_key_ecdh, conversation.user_1.public_key_eddsa],
+                        [conversation.user_2.public_key_ecdh, conversation.user_2.public_key_eddsa],
+                        true, false, authPubKeys);
                 }
-                await decryptMessage(message, prvMnemonic, receiverKeys, senderKeys, true, false, authPubKeys);
                 message.encrypted = false;
                 message.invalid = true;
                 resolve();

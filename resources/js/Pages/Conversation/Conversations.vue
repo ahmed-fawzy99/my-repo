@@ -25,7 +25,6 @@ const props = defineProps({
 });
 const conversations = {...props.conversations_enc};
 
-
 const attrs = useAttrs()
 const activeConversationId = ref(props.passedConversationId ?? (conversations.data[0]?.id ?? null));
 const secretKey = ref('');
@@ -108,9 +107,8 @@ const deleteMsg = async (msgId) => {
         return;
     }
     await deleteMessage(msgId);
-    await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
+    getActiveConversation().messages.filter(msg => msg.id === msgId)[0].content = '';
     sortMsgs(getActiveConversation().messages);
-    console.log("MSG CONTENT : " + getActiveConversation().messages.map(msg => msg.content));
 }
 const countConversationMessages = () => {
     if (!getActiveConversation() || !getActiveConversation().messages) {
@@ -135,6 +133,7 @@ onMounted(() => {
             }
         }
     });
+
 });
 
 const search = debounce(() => {
@@ -174,7 +173,6 @@ Echo.private(`messages.${attrs.auth.user.id}`)
     .listen('MessageSent', async (e) => {
         if (e.message.conversation.id === activeConversationId.value) {
             try {
-                console.log(e.message)
                 await decryptMessage(e.message, secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa], [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa], false, 'auth.user');
             } catch (e) {
                 throw e;
@@ -186,8 +184,10 @@ Echo.private(`messages.${attrs.auth.user.id}`)
         } else {
             getConversationById(e.message.conversation.id).messages.push(e.message);
         }
+    })
+    .listen('MessageDeleted', async (e) => {
+        getActiveConversation().messages.filter(msg => msg.id === e.message.id)[0].content = '';
     });
-
 
 </script>
 

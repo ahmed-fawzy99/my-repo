@@ -108,7 +108,7 @@ defineProps({
                  class="fixed z-50 w-full h-8 bottom-0 text-center ml-16 bg-amber-300 dark:bg-amber-500  ">
                 <p class="h-full content-center text-base-900">
                     <span class="pi pi-exclamation-triangle"/> This is a demo site, uploads have been limited to 3 files
-                    and 1 MB max. each.
+                    and 1 MB max. each. Files are subject to deletion at any time.
                     <span class="pi pi-times text-xs cursor-pointer" @click="setUsageWarning()"></span>
                 </p>
             </div>

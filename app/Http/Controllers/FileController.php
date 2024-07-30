@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFileRequest;
+use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class FileController extends Controller
             ->withCustomProperties([
                 'enc_key' => $validated['key'], // if null, then it's a custom key
                 'checksum' => $validated['checksum'],
+                'sharable' => false,
             ])
             ->toMediaCollection('encrypted_files');
         $media->mime_type = $validated['type'];
@@ -70,4 +72,51 @@ class FileController extends Controller
         }
         return response()->json(['error' => 'File not found'], 404);
     }
+
+    public function share(Request $request)
+    {
+        //  VALIDATION YA 3LE2
+        $media = Media::firstWhere('uuid', $request->uuid);
+
+        if ($media) {
+            if ($media->custom_properties['enc_key'] !== null){
+                return response()->json(['error' => 'Cannot Share private-key encrypted file'], 400);
+            } else {
+                $media->custom_properties['sharable'] = true;
+                $media->save();
+                return response()->json(['file_uuid' => $request->uuid], 200);
+            }
+        }
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
+    public function getShared(String $file_uuid){
+        $media = Media::firstWhere('uuid', $file_uuid);
+        if ($media) {
+            if ($media->custom_properties['enc_key'] !== null || !$media->custom_properties['sharable']){
+                return response()->json(['bad_request' => 'Bas Request'], 400);
+            }
+            return Inertia::render('Share/GetSharedFile', [
+                'file' => $media,
+                'owner' => User::find($media->model_id)->name,
+            ]);
+        }
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
+    public function downloadShared(Request $request)
+    {
+        //  VALIDATION YA 3LE2
+
+        $media = Media::firstWhere('uuid', $request->uuid);
+        if ($media) {
+            if ($media->custom_properties['enc_key'] !== null){
+                return response()->json(['error' => 'Cannot Share private-key encrypted file'], 400);
+            } else {
+                return $media;
+            }
+        }
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
 }
