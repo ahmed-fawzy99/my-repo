@@ -16,7 +16,17 @@ class FileController extends Controller
 {
     public function store(StoreFileRequest $request): RedirectResponse
     {
+        // Some validation first
         $validated = $request->validated();
+        $globals = \App\Models\Globals::first();
+        if (auth()->user()->getMedia('*')->count() >= $globals->max_file_count) {
+            return redirect()->back()->withErrors(['error' => 'You have reached the maximum number of files allowed, which is ' . $globals->max_file_count]);
+        }
+        if ($request->file('file')->getSize() > $globals->max_file_size) {
+            return redirect()->back()->withErrors(['error' => 'File size exceeds the maximum allowed size, which is ' . human_filesize($globals->max_file_size)]);
+        }
+
+        // Store it
         $media = auth()->user()->addMedia($validated['file'])
             ->usingName($validated['name'])
             ->usingFileName($validated['name'])
@@ -46,7 +56,7 @@ class FileController extends Controller
 
     public function modify(Request $request)
     {
-        //  VALIDATION YA 3LE2
+        $request->validate(['uuid' => 'required|uuid']);
         $media = Media::firstWhere('uuid', $request->uuid);
         if ($media) {
             if ($media->model_id !== auth()->id())
@@ -61,8 +71,7 @@ class FileController extends Controller
 
     public function destroy(Request $request)
     {
-        //  VALIDATION YA 3LE2
-
+        $request->validate(['uuid' => 'required|uuid']);
         $media = Media::firstWhere('uuid', $request->uuid);
         if ($media) {
             if ($media->model_id !== auth()->id())
@@ -75,9 +84,8 @@ class FileController extends Controller
 
     public function share(Request $request)
     {
-        //  VALIDATION YA 3LE2
+        $request->validate(['uuid' => 'required|uuid']);
         $media = Media::firstWhere('uuid', $request->uuid);
-
         if ($media) {
             if ($media->custom_properties['enc_key'] !== null){
                 return response()->json(['error' => 'Cannot Share private-key encrypted file'], 400);
@@ -106,8 +114,7 @@ class FileController extends Controller
 
     public function downloadShared(Request $request)
     {
-        //  VALIDATION YA 3LE2
-
+        $request->validate(['uuid' => 'required|uuid']);
         $media = Media::firstWhere('uuid', $request->uuid);
         if ($media) {
             if ($media->custom_properties['enc_key'] !== null){
@@ -118,5 +125,6 @@ class FileController extends Controller
         }
         return response()->json(['error' => 'File not found'], 404);
     }
+
 
 }

@@ -22,7 +22,7 @@ class StoreFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'max:1024'],
+            'file' => ['required', 'file'], // 10MB
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'max:255'],
             'key' => ['nullable', 'string', 'max:255'], // if null, then it's a custom key

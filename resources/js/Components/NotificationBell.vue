@@ -33,7 +33,7 @@ onMounted(() => {
             Notifications
         </div>
         <div class="divide-y divide-base-100 dark:divide-base-700">
-            <Link v-for="notification in notifications" :href="route('conversations.index', {contactId: notification.data.sender_id})" class="flex px-4 py-3 hover:bg-base-100 dark:hover:bg-base-800">
+            <Link v-if="notifications.length > 0" v-for="notification in notifications" :href="route('conversations.index', {contactId: notification.data.sender_id})" class="flex px-4 py-3 hover:bg-base-100 dark:hover:bg-base-800">
                 <div class="flex-shrink-0">
                     <span class="pi pi-user text-2xl p-2 bg-orange-400 rounded-full" />
                 </div>
@@ -44,6 +44,10 @@ onMounted(() => {
                     <div class="text-xs text-primary-600 dark:text-primary-500">{{ dayjs(notification.data.created_at).fromNow() }}</div>
                 </div>
             </Link>
+            <div v-else class="flex flex-col items-center justify-center p-6">
+                <span class="pi pi-bell-slash p-4 rounded-full border-2 text-base-900 dark:text-base-500 border-base-900 dark:border-base-500 mb-4" />
+                <p class="text-base-900 dark:text-base-500">You Have No Notifications</p>
+            </div>
         </div>
     </div>
 </template>

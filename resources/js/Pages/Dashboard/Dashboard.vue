@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {onMounted, ref, watch} from "vue";
-import {Head, router, useForm} from '@inertiajs/vue3';
+import {Head, router, useForm, usePage} from '@inertiajs/vue3';
 import debounce from "lodash/debounce";
 
 import {formatFileSize} from "@/js-helpers/generic-helpers.js";
@@ -27,7 +27,6 @@ import InputLabel from "@/Components/InputLabel.vue";
 import FileInput from "@/Components/FileInput.vue";
 import ToolTip from "@/Components/ToolTip.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import Badge from "@/Components/Badge.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
 
@@ -43,7 +42,8 @@ const props = defineProps({
     quota: Number,
 });
 
-const upload = () => uploadDecrypted(fileForm, usePrivateKey, encryptionKey);
+const page = usePage()
+const upload = () => uploadDecrypted(fileForm, usePrivateKey, encryptionKey, [page.props.auth.user.public_key_ecdh, page.props.auth.user.public_key_eddsa]);
 const reset = () => {
     fileForm.reset();
     usePrivateKey.value = true;
@@ -94,7 +94,7 @@ onMounted(() => {
                         <InputLabel for="enc-choice" value="Specific Encryption Key" class="inline"/>
                         <span class="pi pi-refresh ml-2 cursor-pointer text-xs" title="Generate Random Key"
                               @click="encryptionKey = generateKey(16)"/>
-                        <ToolTip direction="right">This is the key that will be used to decrypt the file.
+                        <ToolTip direction="bottom">This is the key that will be used to decrypt the file.<br>
                             If you are going to share this file, this is the key you will share with the recipient(s).
                             Don't lose it!
                         </ToolTip>
@@ -157,6 +157,7 @@ onMounted(() => {
         </div>
         <h1 class="text-2xl mb-4 ms-4 md:ms-0">My Files</h1>
         <Card class="flex-1">
+
             <Table :links="userFiles.links" :showingNumber="userFiles.data.length" :totalNumber="userFiles.total">
                 <template #Head>
                     <TableHead sortable @click="sort='file_name'; sort_dir = !sort_dir;">File Name</TableHead>
@@ -167,19 +168,18 @@ onMounted(() => {
                 </template>
                 <template #Body>
                     <TableRow v-for="file in userFiles.data" :key="file.id">
-                        <TableBodyHeader :href="'#'">{{ file.file_name }}</TableBodyHeader>
-                        <TableBodyHeader :href="'#'">{{ formatFileSize(file.size) }}</TableBodyHeader>
-                        <TableBody :href="'#'">{{ new Date(file.created_at).toLocaleString('en-EG') }}</TableBody>
-                        <TableBody :href="'#'">
-                            <Badge v-if="file.custom_properties.enc_key" color="blue">Private Key</Badge>
-                            <Badge v-else color="yellow">User-defined Key</Badge>
+                        <TableBodyHeader href="#" class="">{{ file.file_name }}</TableBodyHeader>
+                        <TableBodyHeader href="#">{{ formatFileSize(file.size) }}</TableBodyHeader>
+                        <TableBody href="#">{{ new Date(file.created_at).toLocaleString('en-EG') }}</TableBody>
+                        <TableBody href="#" class="text-xs">
+                            <span v-if="file.custom_properties.enc_key" class="whitespace-nowrap bg-blue-100 text-blue-800 font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Private Key</span>
+                            <span v-else class="whitespace-nowrap bg-yellow-100 text-yellow-800  font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">User-defined Key</span>
                         </TableBody>
                         <TableBodyAction>
                             <div class=" flex gap-4 text-xl">
                                 <a @click="downloadDecrypted(file.uuid, file.file_name, file.custom_properties.enc_key, file.custom_properties.checksum)"
                                    href="#" title="Download">
-                                    <span
-                                        class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                    <span class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="shareHandler(file.uuid, file.custom_properties.enc_key)">
                                                     <span
@@ -188,7 +188,7 @@ onMounted(() => {
                                                         class="pi pi-share-alt rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="renameFile(file.uuid, file.file_name)" href="#" title="Rename File">
-                                    <span class="pi pi-pen-to-square rounded-lg p-2"/>
+                                    <span class="pi pi-pen-to-square text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="removeFile(file.uuid)" href="#" title="Remove File">
                                     <span

@@ -18,11 +18,11 @@ class ContactController extends Controller
         return Inertia::render('Contact/Contacts', [
             'contacts' => auth()->user()->contacts()->get(),
             'allUsers' => User::with('contacts')->
-            where('id', '!=', auth()->id())->
             when($request->term, function ($query, $term) {
                 $query->where('name', 'ILIKE', '%' . $term . '%')
                     ->orWhere('email', 'ILIKE', '%' . $term . '%');
-            })->select('id', 'name', 'email')->orderBy('name')->paginate(10),
+            })
+                ->select('id', 'name', 'email')->orderBy('name')->paginate(10),
             'contactRequestsCount' => $this->incomingContactRequestsCount(),
             'sentRequestsCount' => $this->sentContactRequestsCount(),
         ]);

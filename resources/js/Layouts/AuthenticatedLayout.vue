@@ -70,17 +70,20 @@ defineProps({
                             <path
                                 d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"/>
                         </svg>
+
                     </Link>
                     <div class="flex flex-col items-center mt-3 border-t border-base-700 dark:border-base-700 h-full">
                         <Link
                             class="flex items-center justify-center w-12 h-12 mt-2 rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
+                            :class="{'bg-base-400 dark:bg-primary-700': route().current('contacts.index')}"
                             :href="route('contacts.index')">
                             <span class="pi pi-users scale-125 text-base-700 dark:text-base-200"/>
                         </Link>
                         <Link
                             class="flex items-center justify-center w-12 h-12 mt-2 rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
+                            :class="{'bg-base-400 dark:bg-primary-700': route().current('conversations.index')}"
                             :href="route('conversations.index')">
                             <span class="pi pi-inbox scale-125 text-base-700 dark:text-base-200"/>
                         </Link>
@@ -91,6 +94,7 @@ defineProps({
                     <Link
                         class="flex items-center justify-center w-12 h-12 mt-2 rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
+                        :class="{'bg-base-400 dark:bg-primary-700': route().current('profile.edit')}"
                         :href="route('profile.edit')">
                         <span class="pi pi-cog scale-125 text-base-700 dark:text-base-200"/>
                     </Link>
@@ -108,18 +112,26 @@ defineProps({
         <div class="fixed md:hidden bottom-0 w-full h-12 z-40 items-center  text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
             <div class="flex flex-row h-full">
                 <Link class="flex items-center justify-center px-4 border-r dark:border-gray-800 mr-1" :href="route('dashboard')">
-                    <span class="pi pi-box text-2xl text-base-700 dark:text-base-200"/>
+                    <svg class="w-8 h-8 text-base-700 dark:text-base-100" xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20"
+                         fill="currentColor">
+                        <path
+                            d="M11 17a1 1 0 001.447.894l4-2A1 1 0 0017 15V9.236a1 1 0 00-1.447-.894l-4 2a1 1 0 00-.553.894V17zM15.211 6.276a1 1 0 000-1.788l-4.764-2.382a1 1 0 00-.894 0L4.789 4.488a1 1 0 000 1.788l4.764 2.382a1 1 0 00.894 0l4.764-2.382zM4.447 8.342A1 1 0 003 9.236V15a1 1 0 00.553.894l4 2A1 1 0 009 17v-5.764a1 1 0 00-.553-.894l-4-2z"/>
+                    </svg>
+
                 </Link>
                 <div class="flex flex-row items-center w-full">
                     <Link
                         class="flex items-center justify-center w-12 h-12  rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
+                        :class="{'bg-base-400 dark:bg-primary-700': route().current('contacts.index')}"
                         :href="route('contacts.index')">
                         <span class="pi pi-users text-2xl text-base-700 dark:text-base-200"/>
                     </Link>
                     <Link
                         class="flex items-center justify-center w-12 h-12  rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
+                        :class="{'bg-base-400 dark:bg-primary-700': route().current('conversations.index')}"
                         :href="route('conversations.index')">
                         <span class="pi pi-inbox scale-125 text-base-700 dark:text-base-200"/>
                     </Link>
@@ -128,13 +140,14 @@ defineProps({
                     <Link
                         class="flex items-center justify-center w-12 h-12  rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
-                        :href="route('profile.edit')">
+                        href="#">
                         <span v-if="isDark" class="pi pi-sun scale-125 text-base-700 dark:text-base-200" @click="toggleDark()"/>
                         <span v-else class="pi pi-moon scale-125 text-base-700 dark:text-base-200" @click="toggleDark()"/>
                     </Link>
                     <Link
                         class="flex items-center justify-center w-12 h-12  rounded
                             hover:bg-base-400 dark:hover:bg-base-700"
+                        :class="{'bg-base-400 dark:bg-primary-700': route().current('profile.edit')}"
                         :href="route('profile.edit')">
                         <span class="pi pi-cog scale-125 text-base-700 dark:text-base-200"/>
                     </Link>
@@ -153,8 +166,8 @@ defineProps({
             <div v-if="!usageWarningStatus"
                  class="fixed z-50 w-full h-8 bottom-0 text-center ml-16 bg-amber-300 dark:bg-amber-500  ">
                 <p class="h-full content-center text-base-900">
-                    <span class="pi pi-exclamation-triangle"/> This is a demo site, uploads have been limited to 3 files
-                    and 1 MB max. each. Files are subject to deletion at any time.
+                    <span class="pi pi-exclamation-triangle"/> This is a demo site, uploads have been limited to 10 files
+                    and 5 MB max. each. Files are subject to deletion at any time.
                     <span class="pi pi-times text-xs cursor-pointer" @click="setUsageWarning()"></span>
                 </p>
             </div>
@@ -173,8 +186,6 @@ defineProps({
                         </div>
 
                         <div class="hidden md:flex sm:items-center sm:ms-6">
-
-                            <!-- Dark mode Switcher & Settings Dropdown -->
 
                             <!-- Dropdown menu -->
                             <ChatNotificationBell/>

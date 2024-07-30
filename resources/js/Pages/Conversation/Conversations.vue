@@ -84,7 +84,7 @@ const send = async (message, conversationId, senderPrvMnemonic, senderPubKey, re
     }
     await sendMessage(message, conversationId, senderPrvMnemonic, receiverPubKey);
 
-    const messages =getActiveConversation().messages;
+    const messages = getActiveConversation().messages;
     messages.push(getActiveConversationEnc().messages[getActiveConversationEnc().messages.length - 1]);
     messages[getActiveConversation().messages.length - 1].content = message;
 
@@ -145,8 +145,8 @@ watch(contactSearch, search);
 
 watch(activeConversationId, async (newVal, oldVal) => {
     if (newVal !== oldVal) {
-        if (countConversationMessages()){
-            router.patch(route('conversations.update', {id: newVal}),  {id: newVal}, {
+        if (countConversationMessages()) {
+            router.patch(route('conversations.update', {id: newVal}), {id: newVal}, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: async () => {
@@ -158,16 +158,16 @@ watch(activeConversationId, async (newVal, oldVal) => {
                 }
             });
         }
-}});
-watch(secretKey, async () => {
+    }
+});
+watch(secretKey, debounce(async () => {
     if (secretKey.value.split(' ').length - 1 >= 11) { // for performance, only validate if the key is 12 words
         isValidKey.value = await validatePrivateKey(secretKey.value, [attrs.auth.user.public_key_ecdh, attrs.auth.user.public_key_eddsa]);
     }
     if (countConversationMessages() && isValidKey.value) {
         await decryptConversation(getActiveConversation(), secretKey.value, [getOtherParty().public_key_ecdh, getOtherParty().public_key_eddsa]);
     }
-
-});
+}, 250));
 
 Echo.private(`messages.${attrs.auth.user.id}`)
     .listen('MessageSent', async (e) => {
@@ -265,8 +265,8 @@ Echo.private(`messages.${attrs.auth.user.id}`)
                             <p class="text-sm">{{ conversations.total ? getOtherParty()?.name : null }}</p>
                         </div>
 
-                            <!-- to be implemented later.. -->
-                            <!-- <span class="pi pi-trash me-4"/>-->
+                        <!-- to be implemented later.. -->
+                        <!-- <span class="pi pi-trash me-4"/>-->
                     </div>
                     <div v-if="conversationMessagesCount && activeConversationId" class="p-4  min-h-[calc(100%-7rem)]">
                         <ChatBubble

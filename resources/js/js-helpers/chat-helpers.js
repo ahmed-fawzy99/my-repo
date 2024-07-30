@@ -100,7 +100,6 @@ export async function decryptMessage(message, prvMnemonic, receiverPubKeys, send
             const isValid = validateMsg(content, signature, senderPubKeys[1]);
             if (!isValid) {
                 message.invalid = true;
-                console.log(content)
                 toaster('error', 'Message is not valid');
                 reject('Message is not valid');
                 return;

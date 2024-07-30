@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head, router} from '@inertiajs/vue3';
+import {Head, router, usePage} from '@inertiajs/vue3';
 import Card from "@/Components/Card.vue";
 
 import PrimaryButton from "@/Components/PrimaryButton.vue";
@@ -13,7 +13,8 @@ import TableBody from "@/Components/Table/TableBody.vue";
 import CryptoJS from "crypto-js";
 import {ref} from "vue";
 import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
-import {fancyPrompt} from "@/js-helpers/generic-helpers.js";
+import {fancyPrompt, toaster} from "@/js-helpers/generic-helpers.js";
+import {validatePrivateKey} from "@/js-helpers/chat-helpers.js";
 
 const props = defineProps({
     files: Object,
@@ -21,6 +22,7 @@ const props = defineProps({
 
 const isRevealed = ref(false);
 const decrypted = ref(false);
+const page = usePage()
 
 const fillTable = (text = undefined) => {
     props.files.data.forEach((file) => {
@@ -35,6 +37,12 @@ async function toggleKeys() {
     }
     if (!decrypted.value){
         const mnemonicSeed = await fancyPrompt('Enter your mnemonic seed');
+        if (!mnemonicSeed) return;
+        const isvalid = await validatePrivateKey(mnemonicSeed, [page.props.auth.user.public_key_ecdh, page.props.auth.user.public_key_eddsa]);
+        if (!isvalid) {
+            toaster('error', 'Invalid Secret Phrase entered.');
+            return;
+        }
         const privateKey = await getPrivateKey(mnemonicSeed);
 
         props.files.data.forEach((file) => {
@@ -63,11 +71,11 @@ async function toggleKeys() {
                 <h1 class="text-4xl mb-4">Your Key Vault</h1>
                 <span class="text-xs">You don't need to worry about this part, MyRepo handles it for you. This page exists for transparency</span>
             </div>
-            <div class="flex inline-flex gap-4">
-                <PrimaryButton @click="toggleKeys()">
-                    <span class="pi pi-eye text-xl mr-2" /> Show You Keys
-                </PrimaryButton>
-            </div>
+            <PrimaryButton @click="toggleKeys()">
+                <div class="flex items-center">
+                    <span class="pi pi-eye text-xl mr-2" /> <span>Show You Keys</span>
+                </div>
+            </PrimaryButton>
         </div>
 
         <Card class="">

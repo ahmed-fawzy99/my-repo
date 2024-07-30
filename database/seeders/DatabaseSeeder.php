@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Contact;
 use App\Models\Conversation;
+use App\Models\Globals;
 use App\Models\Message;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -17,50 +18,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
-        $root = User::factory()->create([
-            'name' => 'Super Root',
-            'email' => 'super@root.com',
-//            'public_key_ecdh' => '1e252f694f3a2840d9c9cadd4059c5f87359cfcb68fe45c39ad242e1ebb55728',
-//            'public_key_eddsa' => '1e252f694f3a2840d9c9cadd4059c5f87359cfcb68fe45c39ad242e1ebb55728',
-        ]);
-        $root2 = User::factory()->create([
-            'name' => 'Normal Root',
-            'email' => 'normal@root.com',
-//            'public_key_ecdh' => '1fdc00478c5562bef15e75da7343f5d0efc88a0da23028df7f05e506a609454d',
-//            'public_key_eddsa' => '1fdc00478c5562bef15e75da7343f5d0efc88a0da23028df7f05e506a609454d',
-        ]);
-        $root->contacts()->attach($root2);
-        $root2->contacts()->attach($root);
 
-        Contact::where('user_id', $root->id)->where('contact_id', $root2->id)->update(['contact_accepted' => true]);
-        Contact::where('user_id', $root2->id)->where('contact_id', $root->id)->update(['contact_accepted' => true]);
-
-        $i = 1;
-        foreach (User::all() as $user) {
-            if ($user->id === $root->id || $user->id === $root2->id) {
-                continue;
-            }
-            $root->contacts()->attach($user);
-            Contact::where('user_id', $root->id)->where('contact_id', $user->id)->update(['contact_accepted' => true]);
-
-            $user->contacts()->attach($root);
-            Contact::where('user_id', $user->id)->where('contact_id', $root->id)->update(['contact_accepted' => true]);
-
-            Conversation::create([
-                'user_1' => $root->id,
-                'user_2' => $user->id,
-            ]);
-            $i = $i + 1;
-            if ($i > 3) {
-                break;
-            }
-        }
-
-        $convo = Conversation::factory()->create([
-            'user_1' => $root->id,
-            'user_2' => $root2->id,
+        Globals::create([
+            'max_file_size' => 5242880,
+            'max_file_count' => 10,
         ]);
 
+        User::factory()->create([
+            'name' => 'Supreme Root',
+            'email' => 'supreme@root.com',
+            'password' => bcrypt('HelloKittyImSoPretty'),
+        ]);
     }
 }

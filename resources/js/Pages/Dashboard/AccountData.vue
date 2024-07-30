@@ -25,7 +25,9 @@ import DashboardTabs from "@/Components/Tabs/DashboardTabs.vue";
             <h1 class="text-4xl mb-4">Account Data</h1>
             <div class="flex gap-4">
                 <PrimaryButton @click="router.get(route('profile.edit', {id: $attrs.auth.user.id}))">
-                    <span class="pi pi-user-edit text-xl mr-2" /> Edit Your Data
+                    <div class="flex items-center">
+                        <span class="pi pi-user-edit text-xl mr-2" /> <span>Edit Your Data</span>
+                    </div>
                 </PrimaryButton>
             </div>
         </div>

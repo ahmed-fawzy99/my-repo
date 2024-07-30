@@ -1,26 +1,17 @@
 import CryptoJS from "crypto-js";
 import {mnemonicToSeed} from "bip39";
 import elliptic from "elliptic";
-import {downloadFile, fancyPrompt, Toast} from "@/js-helpers/generic-helpers.js";
+import {downloadFile, fancyPrompt, Toast, toaster} from "@/js-helpers/generic-helpers.js";
 import Swal from "sweetalert2";
 import {router} from "@inertiajs/vue3";
+import {validatePrivateKey} from "@/js-helpers/chat-helpers.js";
 
 
 export async function sendFile(contactId){
-
     // To be implemented later
-
-    // console.log(contactId)
-    // const { value: file } = await Swal.fire({
-    //     title: "Select File",
-    //     input: "file",
-    //
-    // });
-    // if (file) {
-    // }
 }
 
-export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey){
+export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey, publicKeys){
     const reader = new FileReader();
     reader.onload = async (e) => {
 
@@ -29,6 +20,11 @@ export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey){
             const mnemonicSeed = await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea", undefined)
             if (!mnemonicSeed)
                 return;
+            const isvalid = await validatePrivateKey(mnemonicSeed, publicKeys);
+            if (!isvalid){
+                toaster('error', 'Invalid Secret Phrase entered.');
+                return;
+            }
             key = generateKey();
             const privateKey = await getPrivateKey(mnemonicSeed);
             fileForm.key = CryptoJS.AES.encrypt(key, privateKey).toString();

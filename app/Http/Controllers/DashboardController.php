@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Globals;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,11 +23,13 @@ class DashboardController extends Controller
             ]);
             $sortDir = $request->sort_dir ? 'asc' : 'desc';
         }
+        $globals = Globals::first();
+        logger($globals);
         return Inertia::render('Dashboard/Dashboard', [
             'userFiles' => auth()->user()->media()->orderBy($request->sort ?? 'created_at', $sortDir)->paginate(10),
             'filesCount' => auth()->user()?->getMedia('*')->count(),
             'storageUsage' => auth()->user()?->getMedia('*')->sum('size'),
-            'quota' => 3000000, // To be replaced with the user's quota based on the plan
+            'quota' => $globals->max_file_size * $globals->max_file_count,
         ]);
     }
 
