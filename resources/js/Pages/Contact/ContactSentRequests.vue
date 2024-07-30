@@ -20,7 +20,7 @@ defineProps({
         <template #tabs>
             <ContactTabs :inCount="contactRequestsCount" :outCount="contactSentRequests.length"/>
         </template>
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
             <h1 class="text-4xl mb-4">Pending Sent Requests</h1>
         </div>
         <Card>

@@ -46,7 +46,7 @@ const trackSelectedContacts = (event, id, name) => {
         <template #tabs>
             <ContactTabs :inCount="contactRequestsCount" :outCount="sentRequestsCount"/>
         </template>
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
             <h1 class="text-4xl mb-4">My Contacts</h1>
             <div class="flex gap-4">
                 <ContactFind
@@ -82,7 +82,7 @@ const trackSelectedContacts = (event, id, name) => {
             </div>
         </div>
 
-        <Card>
+        <Card class="mb-8 md:mb-0">
             <div v-if="contacts.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto">
                 <ContactCard v-for="contact in contacts" :key="contact.id"
                     :id="Math.random().toString(36).slice(2, 5)" @openConversation="openConversation" @sendFile="sendFile"
@@ -93,6 +93,5 @@ const trackSelectedContacts = (event, id, name) => {
                 <span class="pi pi-info-circle mr-2" /> You don't have any contacts.
             </div>
         </Card>
-
     </AuthenticatedLayout>
 </template>

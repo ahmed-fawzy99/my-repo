@@ -200,7 +200,7 @@ Echo.private(`messages.${attrs.auth.user.id}`)
         <template #free-content>
             <div
                 class="w-full h-12 overflow-hidden text-white  bg-primary-700 dark:bg-primary-950 text-sm p-1 flex items-center justify-between px-4 gap-4">
-                <span class="w-1/3">Paste Your Private Secret Word: <ToolTip>This key will be used to encrypt your outgoing messages <br> and decrypt your conversations.</ToolTip></span>
+                <span class="hidden md:block w-1/3">Paste Your Private Secret Word: <ToolTip>This key will be used to encrypt your outgoing messages <br> and decrypt your conversations.</ToolTip></span>
                 <TextInput v-model="secretKey" type="text" autocomplete="off" class="w-full !p-1.5" id="secret-key"
                            :class="{ '!border-green-500 ': isValidKey, '!border-red-500': secretKey && !isValidKey }"
                            :disabled="getActiveConversation() === null"
@@ -209,15 +209,13 @@ Echo.private(`messages.${attrs.auth.user.id}`)
                       class="pi pi-eye cursor-pointer"/>
             </div>
 
-            <div class="h-[calc(100vh-7rem)] w-full grid grid-cols-12 dark:bg-base-950">
-
+            <div class="h-[calc(100vh-10rem)] md:h-[calc(100vh-7rem)] w-full grid grid-cols-12 dark:bg-base-950 ">
                 <!-- Conversation Selector -->
                 <div
-                    class="col-span-3 bg-base-200 dark:bg-base-800 shadow-sm border-r border-base-200 dark:border-base-900">
+                    class="col-span-4 md:col-span-3 bg-base-200 dark:bg-base-800 shadow-sm border-r border-base-200 dark:border-base-900">
                     <div class="px-4 py-2">
                         <label for="conversation-search" class="sr-only">Search</label>
                         <div class="relative w-full">
-                            <span></span>
                             <input type="text" id="conversation-search" v-model="contactSearch"
                                    class="bg-base-50 border border-base-300 text-base-900 text-sm rounded-lg
                         focus:ring-primary-500 focus:border-primary-500 block w-full
@@ -236,7 +234,7 @@ Echo.private(`messages.${attrs.auth.user.id}`)
                     }"
                         >
                             <div class="flex items-center space-x-4">
-                                <span class="pi pi-user text-2xl mr-2"/>
+                                <span class="hidden md:inline pi pi-user text-xs mr-0 md:text-2xl md:mr-2"/>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-base-900 truncate dark:text-white">
                                         {{
@@ -259,7 +257,7 @@ Echo.private(`messages.${attrs.auth.user.id}`)
                 </div>
 
                 <!-- Chat Screen -->
-                <div class="col-span-9 overflow-y-scroll " id="chat-content">
+                <div class="col-span-8 md:col-span-9 overflow-y-scroll " id="chat-content">
                     <div
                         class="sticky h-12 top-0 w-full p-3 bg-base-200 dark:bg-base-900 flex justify-between items-center">
                         <div class="flex items-center">

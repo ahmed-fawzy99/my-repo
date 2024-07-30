@@ -43,7 +43,8 @@ onMounted(() => {
                     'rounded-s-xl rounded-ee-xl bg-primary-700 ': isSender,
                 }">
             <span class="text-sm font-semibold text-white">{{ msg.name }}</span>
-            <span class="text-xs font-normal text-base-300">{{ dayjs(msg.time).fromNow() + ' - ' + dayjs(msg.time).format('YYYY-MM-DD h:mm A') }}</span>
+            <span class="text-xs font-normal text-base-300">{{ dayjs(msg.time).fromNow()}} <span class="hidden md:inline">{{'- ' + dayjs(msg.time).format('YYYY-MM-DD h:mm A') }}</span></span>
+
 
             <p v-if="msg.content" class="text-sm font-normal py-2.5 text-white break-words">
                 <span v-if="msg.encrypted">

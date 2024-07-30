@@ -78,11 +78,11 @@ onMounted(() => {
     <Head title="Dashboard"/>
     <AuthenticatedLayout>
         <template #tabs>
-            <DashboardTabs />
+            <DashboardTabs/>
         </template>
-        <h1 class="text-4xl mb-4">Dashboard</h1>
-        <div class="flex flex-row gap-4 h-fit">
-            <Card class="w-full">
+        <h1 class="text-4xl mb-4 ms-4 md:ms-0">Dashboard</h1>
+        <div class="grid grid-cols-12 gap-4">
+            <Card class="col-span-12 md:col-span-9">
                 <h2 class="text-xl">
                     Add File
                 </h2>
@@ -129,7 +129,7 @@ onMounted(() => {
                 </form>
             </Card>
 
-            <div class="flex flex-col w-1/4">
+            <div class="col-span-12 md:col-span-3 flex flex-col">
                 <Card>
                     <div class="mb-2 ">
                         <span class="pi pi-file scale-150"></span>
@@ -152,7 +152,10 @@ onMounted(() => {
             </div>
         </div>
 
-        <h1 class="text-2xl mb-4">My Files</h1>
+        <div class="w-full">
+
+        </div>
+        <h1 class="text-2xl mb-4 ms-4 md:ms-0">My Files</h1>
         <Card class="flex-1">
             <Table :links="userFiles.links" :showingNumber="userFiles.data.length" :totalNumber="userFiles.total">
                 <template #Head>
@@ -175,19 +178,21 @@ onMounted(() => {
                             <div class=" flex gap-4 text-xl">
                                 <a @click="downloadDecrypted(file.uuid, file.file_name, file.custom_properties.enc_key, file.custom_properties.checksum)"
                                    href="#" title="Download">
-                                    <span class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                    <span
+                                        class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="shareHandler(file.uuid, file.custom_properties.enc_key)">
-                                    <span
-                                        :class="{'text-base-500/30 cursor-not-allowed dark:text-base-100/20' : file.custom_properties.enc_key,
-                                                 'text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 transition ease-in-out duration-150': !file.custom_properties.enc_key}"
-                                        class="pi pi-share-alt rounded-lg transition ease-in-out duration-150 p-2"/>
+                                                    <span
+                                                        :class="{'text-base-500/30 cursor-not-allowed dark:text-base-100/20' : file.custom_properties.enc_key,
+                                                                 'text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 transition ease-in-out duration-150': !file.custom_properties.enc_key}"
+                                                        class="pi pi-share-alt rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="renameFile(file.uuid, file.file_name)" href="#" title="Rename File">
                                     <span class="pi pi-pen-to-square rounded-lg p-2"/>
                                 </a>
                                 <a @click="removeFile(file.uuid)" href="#" title="Remove File">
-                                    <span class="pi pi-trash text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                    <span
+                                        class="pi pi-trash text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                             </div>
                         </TableBodyAction>
@@ -195,5 +200,6 @@ onMounted(() => {
                 </template>
             </Table>
         </Card>
+
     </AuthenticatedLayout>
 </template>

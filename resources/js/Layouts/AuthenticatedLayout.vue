@@ -60,7 +60,7 @@ defineProps({
 <template>
     <div class="flex flex-row">
         <aside
-            class="fixed top-0 z-40 items-center w-16 h-screen overflow-hidden text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
+            class="hidden md:block md:fixed top-0 z-40 items-center w-16 h-full text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
             <div class="flex flex-col justify-between h-full">
                 <div class="flex flex-col h-full">
                     <Link class="flex items-center justify-center pt-3 pb-2" :href="route('dashboard')">
@@ -103,6 +103,52 @@ defineProps({
                 </div>
             </div>
         </aside>
+
+        <!-- Mobile Nav -->
+        <div class="fixed md:hidden bottom-0 w-full h-12 z-40 items-center  text-base-400 bg-base-300 dark:bg-base-950 shadow-sm">
+            <div class="flex flex-row h-full">
+                <Link class="flex items-center justify-center px-4 border-r dark:border-gray-800 mr-1" :href="route('dashboard')">
+                    <span class="pi pi-box text-2xl text-base-700 dark:text-base-200"/>
+                </Link>
+                <div class="flex flex-row items-center w-full">
+                    <Link
+                        class="flex items-center justify-center w-12 h-12  rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                        :href="route('contacts.index')">
+                        <span class="pi pi-users text-2xl text-base-700 dark:text-base-200"/>
+                    </Link>
+                    <Link
+                        class="flex items-center justify-center w-12 h-12  rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                        :href="route('conversations.index')">
+                        <span class="pi pi-inbox scale-125 text-base-700 dark:text-base-200"/>
+                    </Link>
+                </div>
+                <div class="flex flex-row items-center border-base-700 border-l dark:border-gray-800">
+                    <Link
+                        class="flex items-center justify-center w-12 h-12  rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                        :href="route('profile.edit')">
+                        <span v-if="isDark" class="pi pi-sun scale-125 text-base-700 dark:text-base-200" @click="toggleDark()"/>
+                        <span v-else class="pi pi-moon scale-125 text-base-700 dark:text-base-200" @click="toggleDark()"/>
+                    </Link>
+                    <Link
+                        class="flex items-center justify-center w-12 h-12  rounded
+                            hover:bg-base-400 dark:hover:bg-base-700"
+                        :href="route('profile.edit')">
+                        <span class="pi pi-cog scale-125 text-base-700 dark:text-base-200"/>
+                    </Link>
+                    <Link
+                        class="flex items-center justify-center w-12 h-12  rounded
+                         hover:bg-base-400 dark:hover:bg-base-700"
+                        :href="route('logout')" method="post" as="button">
+                        <span class="pi pi-sign-out scale-125 text-base-700 dark:text-base-200"/>
+                    </Link>
+                </div>
+
+            </div>
+        </div>
+
         <Transition>
             <div v-if="!usageWarningStatus"
                  class="fixed z-50 w-full h-8 bottom-0 text-center ml-16 bg-amber-300 dark:bg-amber-500  ">
@@ -114,26 +160,24 @@ defineProps({
             </div>
         </Transition>
 
-        <div class="ml-16 min-h-screen flex-grow bg-base-100 dark:bg-base-900">
+        <div class="md:ml-16 min-h-screen flex-grow bg-base-100 dark:bg-base-900">
             <nav class="bg-white dark:bg-base-900 border-b border-base-100 dark:border-base-700  shadow-sm">
                 <!-- Primary Navigation Menu -->
                 <div class=" mx-auto px-4 sm:px-6 lg:px-8" :class="{'max-w-7xl' : !freeContent}">
                     <div class="flex justify-between h-16">
                         <div class="flex">
                             <!-- Navigation Links -->
-                            <div class="hidden space-x-8 sm:-my-px sm:flex">
+                            <div class="space-x-4 md:space-x-8 md:-my-px flex overflow-hidden">
                                 <slot name="tabs"></slot>
                             </div>
                         </div>
 
-                        <div class="hidden sm:flex sm:items-center sm:ms-6">
+                        <div class="hidden md:flex sm:items-center sm:ms-6">
 
                             <!-- Dark mode Switcher & Settings Dropdown -->
 
                             <!-- Dropdown menu -->
                             <ChatNotificationBell/>
-
-
                             <button
                                 @click="toggleDark()"
                                 class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700
@@ -143,7 +187,7 @@ defineProps({
                                 <svg
                                     id="theme-toggle-dark-icon"
                                     class="w-5 h-5"
-                                    :class="isDark ? 'block' : 'hidden'"
+                                    :class="isDark ? 'hidden' : 'block'"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -155,7 +199,7 @@ defineProps({
                                 <svg
                                     id="theme-toggle-light-icon"
                                     class="w-5 h-5"
-                                    :class="isDark ? 'hidden' : 'block'"
+                                    :class="isDark ? 'block' : 'hidden'"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -204,44 +248,13 @@ defineProps({
                                 </Dropdown>
                             </div>
                         </div>
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="showingNavigationDropdown = !showingNavigationDropdown"
-                                class="inline-flex items-center justify-center p-2 rounded-md text-base-400 hover:text-base-500 hover:bg-base-100 focus:outline-none focus:bg-base-100 focus:text-base-500 transition duration-150 ease-in-out"
-                            >
-                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex': !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex': showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
                     </div>
                 </div>
 
                 <!-- Responsive Navigation Menu -->
                 <div
                     :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }"
-                    class="sm:hidden"
+                    class="md:hidden bg-base-950"
                 >
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
@@ -250,23 +263,6 @@ defineProps({
                         <ResponsiveNavLink :href="route('account-data')" :active="route().current('account-data')">
                             Account Data
                         </ResponsiveNavLink>
-                    </div>
-
-                    <!-- Responsive Settings Options -->
-                    <div class="pt-4 pb-1 border-t border-base-200">
-                        <div class="px-4">
-                            <div class="font-medium text-base text-base-800">
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="font-medium text-sm text-base-500">{{ $page.props.auth.user.email }}</div>
-                        </div>
-
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')"> Profile</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('logout')" method="post" as="button">
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
                     </div>
                 </div>
             </nav>
@@ -283,7 +279,7 @@ defineProps({
                 <slot name="free-content"/>
                 <div v-if="!freeContent" class="py-8">
                     <ToastNotification v-model="notification"/>
-                    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div class="w-screen md:max-w-7xl mx-auto sm:px-6 lg:px-8">
                         <slot/>
                     </div>
                 </div>

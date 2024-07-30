@@ -58,8 +58,8 @@ async function toggleKeys() {
         <template #tabs>
             <DashboardTabs />
         </template>
-        <div class="flex justify-between items-center mb-4">
-            <div>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+            <div class="text-center md:text-start mb-4 mx-4 md:mb-0 md:mx-0">
                 <h1 class="text-4xl mb-4">Your Key Vault</h1>
                 <span class="text-xs">You don't need to worry about this part, MyRepo handles it for you. This page exists for transparency</span>
             </div>
