@@ -22,7 +22,7 @@ class FileController extends Controller
             return redirect()->back()->withErrors(['error' => 'You have reached the maximum number of files allowed, which is ' . $globals->max_file_count]);
         }
         if ($request->file('file')->getSize() > $globals->max_file_size) {
-            return redirect()->back()->withErrors(['error' => 'File size exceeds the maximum allowed size, which is ' . human_filesize($globals->max_file_size)]);
+            return redirect()->back()->withErrors(['error' => 'File size exceeds the maximum allowed size, which is ' . $this->human_filesize($globals->max_file_size)]);
         }
 
         // Store it
@@ -125,5 +125,11 @@ class FileController extends Controller
         return response()->json(['error' => 'File not found'], 404);
     }
 
+    private function human_filesize($bytes, $dec = 0): string {
+        $size   = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+        $factor = floor((strlen($bytes) - 1) / 3);
+        if ($factor == 0) $dec = 0;
+        return sprintf("%.{$dec}f %s", $bytes / (1024 ** $factor), $size[$factor]);
+    }
 
 }

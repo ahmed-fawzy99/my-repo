@@ -28,6 +28,7 @@ class DashboardController extends Controller
             'userFiles' => auth()->user()->media()->orderBy($request->sort ?? 'created_at', $sortDir)->paginate(10),
             'filesCount' => auth()->user()?->getMedia('*')->count(),
             'storageUsage' => auth()->user()?->getMedia('*')->sum('size'),
+            'maxFileSize' => $globals->max_file_size,
             'quota' => $globals->max_file_size * $globals->max_file_count,
         ]);
     }

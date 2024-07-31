@@ -4,7 +4,7 @@ import {onMounted, ref, watch} from "vue";
 import {Head, router, useForm, usePage} from '@inertiajs/vue3';
 import debounce from "lodash/debounce";
 
-import {formatFileSize} from "@/js-helpers/generic-helpers.js";
+import {formatFileSize, toaster} from "@/js-helpers/generic-helpers.js";
 import {
     downloadDecrypted,
     generateKey,
@@ -38,12 +38,22 @@ const fileForm = useForm({file: null, checksum: '', name: '', type: '', key: '',
 const props = defineProps({
     userFiles: Object,
     filesCount: Number,
+    maxFileSize: Number,
     storageUsage: Number,
     quota: Number,
 });
 
 const page = usePage()
-const upload = () => uploadDecrypted(fileForm, usePrivateKey, encryptionKey, [page.props.auth.user.public_key_ecdh, page.props.auth.user.public_key_eddsa]);
+const upload = () => {
+    if (!fileForm.file) {
+        return;
+    }
+    if (fileForm.file.size > props.maxFileSize) {
+        toaster('error', 'File size exceeds the maximum allowed size, which is ' + formatFileSize(props.maxFileSize));
+        return;
+    }
+    uploadDecrypted(fileForm, usePrivateKey, encryptionKey, [page.props.auth.user.public_key_ecdh, page.props.auth.user.public_key_eddsa]);
+}
 const reset = () => {
     fileForm.reset();
     usePrivateKey.value = true;
@@ -172,14 +182,17 @@ onMounted(() => {
                         <TableBodyHeader href="#">{{ formatFileSize(file.size) }}</TableBodyHeader>
                         <TableBody href="#">{{ new Date(file.created_at).toLocaleString('en-EG') }}</TableBody>
                         <TableBody href="#" class="text-xs">
-                            <span v-if="file.custom_properties.enc_key" class="whitespace-nowrap bg-blue-100 text-blue-800 font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Private Key</span>
-                            <span v-else class="whitespace-nowrap bg-yellow-100 text-yellow-800  font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">User-defined Key</span>
+                            <span v-if="file.custom_properties.enc_key"
+                                  class="whitespace-nowrap bg-blue-100 text-blue-800 font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Private Key</span>
+                            <span v-else
+                                  class="whitespace-nowrap bg-yellow-100 text-yellow-800  font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">User-defined Key</span>
                         </TableBody>
                         <TableBodyAction>
                             <div class=" flex gap-4 text-xl">
                                 <a @click="downloadDecrypted(file.uuid, file.file_name, file.custom_properties.enc_key, file.custom_properties.checksum)"
                                    href="#" title="Download">
-                                    <span class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                    <span
+                                        class="pi pi-cloud-download text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="shareHandler(file.uuid, file.custom_properties.enc_key)">
                                                     <span
@@ -188,7 +201,8 @@ onMounted(() => {
                                                         class="pi pi-share-alt rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="renameFile(file.uuid, file.file_name)" href="#" title="Rename File">
-                                    <span class="pi pi-pen-to-square text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
+                                    <span
+                                        class="pi pi-pen-to-square text-base-500 cursor-pointer hover:bg-primary-300 hover:dark:bg-primary-600 dark:text-base-100 rounded-lg transition ease-in-out duration-150 p-2"/>
                                 </a>
                                 <a @click="removeFile(file.uuid)" href="#" title="Remove File">
                                     <span

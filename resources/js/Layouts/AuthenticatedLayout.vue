@@ -164,10 +164,10 @@ defineProps({
 
         <Transition>
             <div v-if="!usageWarningStatus"
-                 class="fixed z-50 w-full h-8 bottom-0 text-center ml-16 bg-amber-300 dark:bg-amber-500  ">
-                <p class="h-full content-center text-base-900">
-                    <span class="pi pi-exclamation-triangle"/> This is a demo site, uploads have been limited to 10 files
-                    and 5 MB max. each. Files are subject to deletion at any time.
+                 class="fixed z-50 md:w-[calc(100%-4rem)] h-fit md:h-8 bottom-12 md:bottom-0 text-center ml-0 md:ml-16 bg-amber-300 dark:bg-amber-500 break-words ">
+                <p class="h-full content-center text-base-900 ">
+                    <span class="pi pi-exclamation-triangle"/> This is a preview version, uploads have been limited to 10 files
+                    and 5 MB max. each. Data is subject to deletion at any time.
                     <span class="pi pi-times text-xs cursor-pointer" @click="setUsageWarning()"></span>
                 </p>
             </div>
