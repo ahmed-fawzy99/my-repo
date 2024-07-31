@@ -16,7 +16,6 @@ class FileController extends Controller
 {
     public function store(StoreFileRequest $request): RedirectResponse
     {
-        // Some validation first
         $validated = $request->validated();
         $globals = \App\Models\Globals::first();
         if (auth()->user()->getMedia('*')->count() >= $globals->max_file_count) {

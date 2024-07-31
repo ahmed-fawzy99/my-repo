@@ -14,7 +14,6 @@ export async function sendFile(contactId){
 export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey, publicKeys){
     const reader = new FileReader();
     reader.onload = async (e) => {
-
         let key;
         if (usePrivateKey.value){
             const mnemonicSeed = await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea", undefined)
@@ -36,25 +35,26 @@ export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey, pu
         const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
         fileForm.choice = usePrivateKey.value;
 
-
         fileForm.file = new Blob([CryptoJS.AES.encrypt(wordArray, key).toString()]);
 
         fileForm.checksum = CryptoJS.MD5(wordArray.toString()).toString() // MD5Sum
 
         fileForm.post(route('store-file'), {
+            forceFormData: true,
             preserveScroll: true,
-            onError: (e) => {
-                Toast.fire({
-                    icon: 'error',
-                    title: Object.values(e)
-                });
-            },
             onSuccess: () => {
                 document.getElementById('file-input').value = '';
                 fileForm.reset();
                 Toast.fire({
                     icon: "success",
                     title: "File uploaded successfully!"
+                });
+            },
+            onError: (e) => {
+                console.log(e)
+                Toast.fire({
+                    icon: 'error',
+                    title: Object.values(e)
                 });
             },
         });

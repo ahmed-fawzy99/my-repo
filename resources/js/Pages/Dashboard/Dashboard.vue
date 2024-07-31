@@ -69,7 +69,7 @@ onMounted(() => {
     document.getElementById('file-input').addEventListener('change', (e) => {
         fileForm.file = e.target.files[0];
         fileForm.name = e.target.files[0].name;
-        fileForm.type = e.target.files[0].type;
+        fileForm.type = e.target.files[0].type ? e.target.files[0].type : 'application/octet-stream';
     });
 });
 </script>

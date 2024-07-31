@@ -24,7 +24,6 @@ class DashboardController extends Controller
             $sortDir = $request->sort_dir ? 'asc' : 'desc';
         }
         $globals = Globals::first();
-        logger($globals);
         return Inertia::render('Dashboard/Dashboard', [
             'userFiles' => auth()->user()->media()->orderBy($request->sort ?? 'created_at', $sortDir)->paginate(10),
             'filesCount' => auth()->user()?->getMedia('*')->count(),

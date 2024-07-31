@@ -30,8 +30,6 @@ class MessageDeleted implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-            logger('MessageDeleted:');
-            logger($this->message->recipientId());
         return [
             new PrivateChannel('messages.'.$this->message->recipientId()),
         ];
