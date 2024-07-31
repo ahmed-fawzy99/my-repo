@@ -66,7 +66,7 @@ const toggleDark = useToggle(isDark);
                         <Link :href="route('team')"  preserve-state class="mr-4 hover:underline md:mr-6">Team</Link>
                     </li>
                     <li>
-                        <a href="https://github.com" class="mr-4 hover:underline md:mr-6 ">GitHub</a>
+                        <a href="https://github.com/ahmed-fawzy99/my-repo" class="mr-4 hover:underline md:mr-6 ">GitHub</a>
                     </li>
                     <li>
                         <button
