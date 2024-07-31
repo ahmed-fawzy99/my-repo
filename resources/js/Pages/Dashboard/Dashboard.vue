@@ -162,12 +162,8 @@ onMounted(() => {
             </div>
         </div>
 
-        <div class="w-full">
-
-        </div>
         <h1 class="text-2xl mb-4 ms-4 md:ms-0">My Files</h1>
-        <Card class="flex-1">
-
+        <Card class="flex-1 mb-8">
             <Table :links="userFiles.links" :showingNumber="userFiles.data.length" :totalNumber="userFiles.total">
                 <template #Head>
                     <TableHead sortable @click="sort='file_name'; sort_dir = !sort_dir;">File Name</TableHead>
