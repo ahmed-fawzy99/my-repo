@@ -98,10 +98,7 @@ export async function downloadDecrypted(uuid, file_name, enc_key, checksum, rout
             title: 'Downloaded & Decrypted successfully ✅\nChecksum Correct! ✅'
         });
     } catch (e) {
-        Toast.fire({
-            icon: 'error',
-            title: e
-        });
+        console.log(e)
     }
 }
 
