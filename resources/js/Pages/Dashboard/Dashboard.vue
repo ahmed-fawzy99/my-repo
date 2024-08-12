@@ -44,7 +44,7 @@ const props = defineProps({
 });
 
 const page = usePage()
-const upload = () => {
+const uploadHandler = () => {
     if (!fileForm.file) {
         return;
     }
@@ -96,7 +96,7 @@ onMounted(() => {
                 <h2 class="text-xl">
                     Add File
                 </h2>
-                <form @submit.prevent="upload" class="pt-4">
+                <form @submit.prevent="uploadHandler" class="pt-4">
                     <FileInput no-label v-model="fileForm.file"/>
                     <Toggle class="mt-4" v-model="usePrivateKey"
                             label="Encrypt Using My Private Key (Disable If Sharing)"/>

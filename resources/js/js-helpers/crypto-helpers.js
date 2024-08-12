@@ -63,8 +63,6 @@ export async function uploadDecrypted(fileForm, usePrivateKey, encryptionKey, pu
 }
 export async function downloadDecrypted(uuid, file_name, enc_key, checksum, routeName= 'get-file', passedKey = null){
     try {
-        const response = await fetch(route(routeName, {uuid: uuid}));
-        const encryptedFile = await response.text();
         let fileKey;
         if (enc_key){
             const mnemonicSeed = await fancyPrompt('Enter your Secret Phrase:', 'Example: sunrise table mountain tourist carbon fire crystal dragon artwork daemon pistol broccoli', "textarea")
@@ -80,6 +78,8 @@ export async function downloadDecrypted(uuid, file_name, enc_key, checksum, rout
             if (!fileKey)
                 return;
         }
+        const response = await fetch(route(routeName, {uuid: uuid}));
+        const encryptedFile = await response.text();
         const decrypted = CryptoJS.AES.decrypt(encryptedFile, fileKey);
         const decryptedChecksum = CryptoJS.MD5(decrypted.toString()).toString();
         if (decryptedChecksum !== checksum) {
