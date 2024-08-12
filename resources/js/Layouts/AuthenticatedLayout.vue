@@ -1,5 +1,5 @@
 <script setup>
-import {reactive, ref} from 'vue';
+import {ref} from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
@@ -8,7 +8,6 @@ import 'primeicons/primeicons.css'
 import {useDark, useToggle} from "@vueuse/core";
 import ChatNotificationBell from "@/Components/NotificationBell.vue";
 import ToastNotification from "@/Components/ToastNotification.vue";
-import {Toast} from "@/js-helpers/generic-helpers.js";
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);

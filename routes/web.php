@@ -37,11 +37,10 @@ Route::group(['middleware' => ['auth', 'verified', 'HasKeys']], function () {
 
     // Files
     Route::get('get-file', [FileController::class, 'get'])->name('get-file');
-    Route::get('share-file', [FileController::class, 'share'])->name('share-file');
+    Route::get('share-file/{uuid}', [FileController::class, 'share'])->name('share-file');
     Route::post('store-file', [FileController::class, 'store'])->name('store-file');
     Route::patch('rename-file', [FileController::class, 'modify'])->name('rename-file');
     Route::delete('delete-file', [FileController::class, 'destroy'])->name('delete-file');
-
 
     // Contact
     Route::get('contacts/requests', [ContactController::class, 'requestsIndex'])->name('contacts-requests');

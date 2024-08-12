@@ -83,13 +83,17 @@ class FileController extends Controller
 
     public function share(Request $request)
     {
-        $request->validate(['uuid' => 'required|uuid']);
+//        $request->validate(['uuid' => 'required|uuid']);
         $media = Media::firstWhere('uuid', $request->uuid);
         if ($media) {
             if ($media->custom_properties['enc_key'] !== null){
                 return response()->json(['error' => 'Cannot Share private-key encrypted file'], 400);
             } else {
-                $media->custom_properties['sharable'] = true;
+
+                //// we are doing this because we can't update custom properties directly, as Spatie's MediaLibrary Media model uses Laravel's Casts feature to handle the custom_properties attribute, which means you cannot modify it directly using array access.
+                $customProperties = $media->custom_properties;
+                $customProperties['sharable'] = true;
+                $media->custom_properties = $customProperties;
                 $media->save();
                 return response()->json(['file_uuid' => $request->uuid], 200);
             }

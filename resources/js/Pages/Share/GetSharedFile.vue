@@ -24,9 +24,6 @@ const download = () => {
 
 <template>
     <ShareLayout>
-        <Head title="Get File" />
-
-<!--        <p>{{file}}</p>-->
         <div class="mb-4 text-center text-base-900 dark:text-base-100">
             <h1 class="text-3xl font-semibold mb-2">Download File</h1>
             <table class="w-full mx-auto mt-8">
